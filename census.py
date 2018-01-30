@@ -37,12 +37,13 @@ class SmartSession:
         headers = {}
         if came_from:
             async with self.session.get(came_from) as resp:
+                real_url = str(resp.url)
                 x = await resp.read()
             cookies = self.session.cookie_jar.filter_cookies(url)
             if 'csrftoken' in cookies:
                 headers['X-CSRFToken'] = cookies['csrftoken'].value
 
-            headers['Referer'] = came_from
+            headers['Referer'] = real_url
 
         async with getattr(self.session, method)(url, headers=headers) as response:
             text = await response.read()
@@ -51,6 +52,10 @@ class SmartSession:
             with open("save.html", "wb") as f:
                 f.write(text)
         return text
+
+    async def real_url(self, url):
+        async with self.session.get(url) as resp:
+            return str(resp.url)
 
 
 MAX_CLIENTS = 100
