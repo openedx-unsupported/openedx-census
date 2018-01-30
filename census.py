@@ -1,10 +1,14 @@
+"""Visit Open edX sites and count their courses."""
+
 import asyncio
 import csv
 import logging
 import pprint
+import re
 
 import aiohttp
 import attr
+import click
 
 from site_patterns import find_site_function
 
@@ -93,13 +97,20 @@ def read_sites(csv_file):
         for row in csv.reader(f):
             url = row[1].strip().strip("/")
             courses = int(row[2] or 0)
-            if courses < 100:
-                continue
             if not url.startswith("http"):
                 url = "http://" + url
             yield Site(url, courses)
 
-if __name__ == '__main__':
+@click.command(help=__doc__)
+@click.argument('site_patterns', nargs=-1)
+def main(site_patterns):
     sites = list(read_sites("sites.csv"))
+    sites = [s for s in sites if s.latest_courses >= 100]
+    if site_patterns:
+        sites = [s for s in sites if any(re.search(p, s.url) for p in site_patterns)]
     print(f"{len(sites)} sites")
     get_urls(sites)
+
+
+if __name__ == '__main__':
+    main()
