@@ -107,10 +107,11 @@ def read_sites(csv_file):
             yield Site(url, courses)
 
 @click.command(help=__doc__)
+@click.option('--min', type=int, default=100)
 @click.argument('site_patterns', nargs=-1)
-def main(site_patterns):
+def main(min, site_patterns):
     sites = list(read_sites("sites.csv"))
-    sites = [s for s in sites if s.latest_courses >= 100]
+    sites = [s for s in sites if s.latest_courses >= min]
     if site_patterns:
         sites = [s for s in sites if any(re.search(p, s.url) for p in site_patterns)]
     print(f"{len(sites)} sites")
