@@ -1,6 +1,7 @@
 import asyncio
 import csv
 import json
+import logging
 import pprint
 import re
 
@@ -8,6 +9,8 @@ import aiohttp
 import attr
 import lxml
 import lxml.html
+
+log = logging.getLogger(__name__)
 
 @attr.s
 class Site:
@@ -25,9 +28,27 @@ def parse_site(pattern):
         return func
     return _decorator
 
-async def text_from_url(url, session):
-    async with session.get(url) as response:
-        return await response.read()
+class SmartSession:
+    def __init__(self, session):
+        self.session = session
+
+    def __getattr__(self, name):
+        return getattr(self.session, name)
+
+    async def text_from_url(self, url, came_from=None, method='get'):
+        headers = {}
+        if came_from:
+            async with self.session.get(came_from) as resp:
+                x = await resp.read()
+            cookies = self.session.cookie_jar.filter_cookies(url)
+            if 'csrftoken' in cookies:
+                headers['X-CSRFToken'] = cookies['csrftoken'].value
+
+            headers['Referer'] = came_from
+
+        async with getattr(self.session, method)(url, headers=headers) as response:
+            return await response.read()
+
 
 def xpath_from_html(html, xpath):
     parser = lxml.etree.HTMLParser()
@@ -40,7 +61,7 @@ def xpath_from_html(html, xpath):
 @parse_site(r"www\.xuetangx\.com$")
 async def parser(site, session):
     url = "http://www.xuetangx.com/partners"
-    text = await text_from_url(url, session)
+    text = await session.text_from_url(url)
     li = xpath_from_html(text, "/html/body/article[1]/section/ul/li/a/div[2]/p[1]")
     courses = 0
     for l in li:
@@ -54,46 +75,43 @@ async def parser(site, session):
 @parse_site(r"france-universite-numerique-mooc\.fr$")
 async def parser(site, session):
     url = "https://www.fun-mooc.fr/fun/api/courses/?rpp=50&page=1"
-    text = await text_from_url(url, session)
+    text = await session.text_from_url(url)
     data = json.loads(text)
     return data['count']
 
 @parse_site(r"courses.openedu.tw$")
 async def parser(site, session):
     url = "https://www.openedu.tw/rest/courses/query"
-    text = await text_from_url(url, session)
+    text = await session.text_from_url(url)
     data = json.loads(text)
     return len(data)
 
 @parse_site(r"courses.zsmu.edu.ua")
 @parse_site(r"lms.mitx.mit.edu")
 async def front_page_full_of_tiles(site, session):
-    text = await text_from_url(site.url, session)
+    text = await session.text_from_url(site.url)
     li = xpath_from_html(text, "//ul/li[@class='courses-listing-item']")
     return len(li)
 
 @parse_site(r"openedu.ru$")
 async def parser(site, session):
     url = "https://openedu.ru/course/"
-    text = await text_from_url(url, session)
+    text = await session.text_from_url(url)
     count = xpath_from_html(text, "//span[@id='courses-found']")[0]
     assert count.text.endswith(" курс")
     return int(count.text.split()[0])
 
 @parse_site(r"puroom.net$")
 async def parser(site, session):
+    url1 = 'https://lms.puroom.net/courses'
     url = "https://lms.puroom.net/search/course_discovery/"
-    headers = {'Referer': 'https://lms.puroom.net/courses'}
-    # Needs CSRF from ^^
-    async with session.post(url, headers=headers) as response:
-        text = await response.read()
-    print(repr(text))
+    text = await session.text_from_url(url, came_from=url1, method='post')
     data = json.loads(text)
     count = data["facets"]["emonitoring_course"]["total"]
     return count
 
 async def default_parser(site, session):
-    text = await text_from_url(site.url, session)
+    text = await session.text_from_url(site.url)
     return len(text) * 1000
 
 
@@ -112,6 +130,7 @@ async def fetch(site, session):
         print(".", end='', flush=True)
         return True
     except Exception as exc:
+        log.exception(f"Couldn't fetch {site.url}")
         site.error = str(exc)
         print("X", end='', flush=True)
         return False
@@ -128,12 +147,13 @@ async def run(sites):
         'User-Agent': USER_AGENT,
     }
     async with aiohttp.ClientSession(headers=headers) as session:
+        smart = SmartSession(session)
         for site in sites:
-            task = asyncio.ensure_future(throttled_fetch(site, session, sem))
+            task = asyncio.ensure_future(throttled_fetch(site, smart, sem))
             tasks.append(task)
 
         responses = await asyncio.gather(*tasks)
-    print()
+        print()
 
 def get_urls(sites):
     loop = asyncio.get_event_loop()
