@@ -1,6 +1,7 @@
 """Parsers for specific sites."""
 
 import json
+import urllib.parse
 
 from helpers import elements_by_css, elements_by_xpath
 from site_patterns import matches
@@ -39,9 +40,11 @@ async def parser(site, session):
 
 @matches(r"courses.zsmu.edu.ua")
 @matches(r"lms.mitx.mit.edu")
-async def front_page_full_of_tiles(site, session):
-    text = await session.text_from_url(site.url)
-    li = elements_by_css(text, "li.courses-listing-item")
+@matches(r"memooc\.hu$")
+async def courses_page_full_of_tiles(site, session):
+    url = urllib.parse.urljoin(site.url, "/courses")
+    text = await session.text_from_url(url)
+    li = elements_by_css(text, ".courses ul.courses-listing > li")
     return len(li)
 
 @matches(r"openedu.ru$")
