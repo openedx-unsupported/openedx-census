@@ -47,12 +47,14 @@ async def parser(site, session):
     return int(count.text.split()[0])
 
 @matches(r"puroom.net$")
-async def parser(site, session):
-    url0 = 'https://lms.puroom.net/courses'
-    url = "https://lms.puroom.net/search/course_discovery/"
+@matches(r"pok.polimi.it$")
+async def course_discovery_post(site, session):
+    real_url = await session.real_url(site.url)
+    url0 = urllib.parse.urljoin(real_url, '/courses')
+    url = urllib.parse.urljoin(real_url, '/search/course_discovery/')
     text = await session.text_from_url(url, came_from=url0, method='post')
     data = json.loads(text)
-    count = data["facets"]["emonitoring_course"]["total"]
+    count = data["total"]
     return count
 
 @matches(r"gacco.org$")
