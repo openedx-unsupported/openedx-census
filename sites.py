@@ -38,15 +38,6 @@ async def parser(site, session):
     data = json.loads(text)
     return len(data)
 
-@matches(r"courses.zsmu.edu.ua")
-@matches(r"lms.mitx.mit.edu")
-@matches(r"memooc\.hu$")
-async def courses_page_full_of_tiles(site, session):
-    url = urllib.parse.urljoin(site.url, "/courses")
-    text = await session.text_from_url(url)
-    li = elements_by_css(text, ".courses ul.courses-listing > li")
-    return len(li)
-
 @matches(r"openedu.ru$")
 async def parser(site, session):
     url = "https://openedu.ru/course/"
@@ -76,6 +67,16 @@ async def parser(site, session):
     data = json.loads(text)
     count += len(data["archived_courses"])
     return count
+
+@matches(r"courses.zsmu.edu.ua")
+@matches(r"lms.mitx.mit.edu")
+@matches(r"memooc\.hu$")
+@matches(r".")
+async def courses_page_full_of_tiles(site, session):
+    url = urllib.parse.urljoin(site.url, "/courses")
+    text = await session.text_from_url(url)
+    li = elements_by_css(text, ".courses ul.courses-listing > li")
+    return len(li)
 
 # All the rest go here...
 @matches(r".")
