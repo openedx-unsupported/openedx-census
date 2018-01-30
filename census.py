@@ -64,7 +64,7 @@ async def fetch(site, session):
         print(".", end='', flush=True)
         return True
     except Exception as exc:
-        log.exception(f"Couldn't fetch {site.url}")
+        #log.exception(f"Couldn't fetch {site.url}")
         site.error = str(exc)
         print("X", end='', flush=True)
         return False
@@ -93,8 +93,6 @@ def get_urls(sites):
     loop = asyncio.get_event_loop()
     future = asyncio.ensure_future(run(sites))
     loop.run_until_complete(future)
-    for site in sorted(sites, key=lambda s: s.latest_courses, reverse=True):
-        print(site)
 
 def read_sites(csv_file):
     with open(csv_file) as f:
@@ -115,8 +113,18 @@ def main(min, site_patterns):
     if site_patterns:
         sites = [s for s in sites if any(re.search(p, s.url) for p in site_patterns)]
     print(f"{len(sites)} sites")
+
     get_urls(sites)
 
+    for site in sorted(sites, key=lambda s: s.latest_courses, reverse=True):
+        print(site)
+
+    old = new = 0
+    for site in sites:
+        if site.current_courses:
+            old += site.latest_courses
+            new += site.current_courses
+    print(f"Found courses went from {old} to {new}")
 
 if __name__ == '__main__':
     main()
