@@ -33,7 +33,7 @@ class SmartSession:
     def __getattr__(self, name):
         return getattr(self.session, name)
 
-    async def text_from_url(self, url, came_from=None, method='get'):
+    async def text_from_url(self, url, came_from=None, method='get', save=False):
         headers = {}
         if came_from:
             async with self.session.get(came_from) as resp:
@@ -45,7 +45,12 @@ class SmartSession:
             headers['Referer'] = came_from
 
         async with getattr(self.session, method)(url, headers=headers) as response:
-            return await response.read()
+            text = await response.read()
+
+        if save:
+            with open("save.html", "wb") as f:
+                f.write(text)
+        return text
 
 
 MAX_CLIENTS = 100
