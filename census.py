@@ -50,10 +50,16 @@ class SmartSession:
             return await response.read()
 
 
-def xpath_from_html(html, xpath):
+def elements_by_xpath(html, xpath):
     parser = lxml.etree.HTMLParser()
     tree = lxml.etree.fromstring(html, parser)
     elts = tree.xpath(xpath)
+    return elts
+
+def elements_by_css(html, css):
+    parser = lxml.etree.HTMLParser()
+    tree = lxml.etree.fromstring(html, parser)
+    elts = tree.cssselect(css)
     return elts
 
 
@@ -62,7 +68,10 @@ def xpath_from_html(html, xpath):
 async def parser(site, session):
     url = "http://www.xuetangx.com/partners"
     text = await session.text_from_url(url)
-    li = xpath_from_html(text, "/html/body/article[1]/section/ul/li/a/div[2]/p[1]")
+    section = elements_by_xpath(text, "/html/body/article[1]/section")
+    assert len(section) == 1
+    assert section[0].xpath("h2")[0].text == "开课院校"
+    li = section[0].xpath("ul/li/a/div[2]/p[1]")
     courses = 0
     for l in li:
         suffix = "门课程"
@@ -90,14 +99,14 @@ async def parser(site, session):
 @parse_site(r"lms.mitx.mit.edu")
 async def front_page_full_of_tiles(site, session):
     text = await session.text_from_url(site.url)
-    li = xpath_from_html(text, "//ul/li[@class='courses-listing-item']")
+    li = elements_by_css(text, "li.courses-listing-item")
     return len(li)
 
 @parse_site(r"openedu.ru$")
 async def parser(site, session):
     url = "https://openedu.ru/course/"
     text = await session.text_from_url(url)
-    count = xpath_from_html(text, "//span[@id='courses-found']")[0]
+    count = elements_by_css(text, "span#courses-found")[0]
     assert count.text.endswith(" курс")
     return int(count.text.split()[0])
 

@@ -3,3 +3,4 @@ aiodns
 attrs
 lxml
 async_timeout
+cssselect
