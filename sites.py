@@ -79,9 +79,3 @@ async def courses_page_full_of_tiles(site, session):
     text = await session.text_from_url(url)
     li = elements_by_css(text, ".courses ul.courses-listing > li")
     return len(li)
-
-# All the rest go here...
-@matches(r".")
-async def parser(site, session):
-    text = await session.text_from_url(site.url)
-    return len(text) * 1000
