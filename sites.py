@@ -61,6 +61,19 @@ async def parser(site, session):
     count = data["facets"]["emonitoring_course"]["total"]
     return count
 
+@matches(r"gacco.org$")
+async def parser(site, session):
+    url = "http://gacco.org/data/course/gacco_list.json"
+    text = await session.text_from_url(url)
+    data = json.loads(text)
+    count = len(data["opened_courses"])
+
+    url = "http://gacco.org/data/course/gacco_archive.json"
+    text = await session.text_from_url(url)
+    data = json.loads(text)
+    count += len(data["archived_courses"])
+    return count
+
 # All the rest go here...
 @matches(r".")
 async def parser(site, session):
