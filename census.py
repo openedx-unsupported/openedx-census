@@ -58,7 +58,7 @@ class SmartSession:
             return str(resp.url)
 
 
-MAX_CLIENTS = 100
+MAX_CLIENTS = 200
 USER_AGENT = "Open edX census-taker. Tell us about your site: oscm+census@edx.org"
 
 
@@ -97,6 +97,8 @@ async def run(sites):
 def get_urls(sites):
     loop = asyncio.get_event_loop()
     future = asyncio.ensure_future(run(sites))
+    # Some exceptions go to stderr and then to my except clause? Shut up.
+    loop.set_exception_handler(lambda loop, context: None)
     loop.run_until_complete(future)
 
 def read_sites(csv_file):
