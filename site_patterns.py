@@ -6,7 +6,7 @@ SITE_PATTERNS = []
 
 def matches(pattern):
     def _decorator(func):
-        SITE_PATTERNS.append((re.compile(pattern), func))
+        SITE_PATTERNS.append((re.compile(r"\b" + pattern), func))
         return func
     return _decorator
 
