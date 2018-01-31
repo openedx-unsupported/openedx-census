@@ -46,21 +46,6 @@ async def openedu_ru_parser(site, session):
     assert count.text.endswith(" курс")
     return int(count.text.split()[0])
 
-@matches(r"puroom.net$")
-@matches(r"pok.polimi.it$")
-@matches(r".")
-async def course_discovery_post(site, session):
-    real_url = await session.real_url(site.url)
-    url0 = urllib.parse.urljoin(real_url, '/courses')
-    url = urllib.parse.urljoin(real_url, '/search/course_discovery/')
-    text = await session.text_from_url(url, came_from=url0, method='post')
-    data = json.loads(text)
-    count = data["total"]
-    if count == 0:
-        # Seems like we didn't get a usable answer.
-        raise Exception("got zero")
-    return count
-
 @matches(r"gacco.org$")
 async def gacco_parser(site, session):
     url = "http://gacco.org/data/course/gacco_list.json"
@@ -79,4 +64,19 @@ async def courses_page_full_of_tiles(site, session):
     url = urllib.parse.urljoin(site.url, "/courses")
     text = await session.text_from_url(url)
     li = elements_by_css(text, ".courses ul.courses-listing > li")
-    return len(li)
+    count = len(li)
+    if count == 0:
+        raise Exception("got zero")
+    return count
+
+@matches(r".")
+async def course_discovery_post(site, session):
+    real_url = await session.real_url(site.url)
+    url0 = urllib.parse.urljoin(real_url, '/courses')
+    url = urllib.parse.urljoin(real_url, '/search/course_discovery/')
+    text = await session.text_from_url(url, came_from=url0, method='post')
+    data = json.loads(text)
+    count = data["total"]
+    if count == 0:
+        raise Exception("got zero")
+    return count
