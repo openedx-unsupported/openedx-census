@@ -67,6 +67,17 @@ async def doroob_parser(site, session):
     count = len(elts)
     return count
 
+@matches(r"millionlights.org$")
+async def millionlights_parser(site, session):
+    # There's a number on the front page, this number is different, but seems
+    # more accurate.
+    url = "https://www.millionlights.org/Course/GetCourses"
+    text = await session.text_from_url(url, method='post')
+    data = json.loads(text)
+    count = len(data)
+    return count
+
+
 @matches(r".")
 async def courses_page_full_of_tiles(site, session):
     url = urllib.parse.urljoin(site.url, "/courses")
