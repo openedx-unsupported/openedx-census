@@ -5,6 +5,7 @@ import csv
 import logging
 import pprint
 import re
+import time
 import traceback
 from xml.sax.saxutils import escape
 
@@ -27,6 +28,7 @@ class Site:
     latest_courses = attr.ib()
     current_courses = attr.ib(default=None)
     tried = attr.ib(default=attr.Factory(list))
+    time = attr.ib(default=None)
 
 
 GET_KWARGS = dict(verify_ssl=False)
@@ -68,6 +70,7 @@ USER_AGENT = "Open edX census-taker. Tell us about your site: oscm+census@edx.or
 
 
 async def fetch(site, session):
+    start = time.time()
     for parser in find_site_functions(site.url):
         try:
             site.current_courses = await parser(site, session)
@@ -80,6 +83,7 @@ async def fetch(site, session):
             break
     else:
         print("X", end='', flush=True)
+    site.time = time.time() - start
 
 
 async def throttled_fetch(site, session, sem):
@@ -164,7 +168,7 @@ def main(min, format, site_patterns):
 
             writer = HtmlOutlineWriter(htmlout, css=CSS)
             for site in sites_descending:
-                writer.start_section(f"<span class='url'>{site.url}</span>: {site.latest_courses} &rarr; {site.current_courses}")
+                writer.start_section(f"<span class='url'>{site.url}</span>: {site.latest_courses} &rarr; {site.current_courses} ({site.time:.1f}s)")
                 for strategy, tb in site.tried:
                     if tb is not None:
                         line = tb.splitlines()[-1][:100]
