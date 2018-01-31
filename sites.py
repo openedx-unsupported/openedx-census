@@ -59,6 +59,14 @@ async def gacco_parser(site, session):
     count += len(data["archived_courses"])
     return count
 
+@matches(r"doroob.sa$")
+async def doroob_parser(site, session):
+    url = "https://www.doroob.sa/ar/individuals/elearning/"
+    text = await session.text_from_url(url, save=True)
+    elts = elements_by_css(text, ".courses-listing-item")
+    count = len(elts)
+    return count
+
 @matches(r".")
 async def courses_page_full_of_tiles(site, session):
     url = urllib.parse.urljoin(site.url, "/courses")
