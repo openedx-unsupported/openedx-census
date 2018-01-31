@@ -113,22 +113,32 @@ def get_urls(sites):
     loop.set_exception_handler(lambda loop, context: None)
     loop.run_until_complete(future)
 
-def read_sites(csv_file):
+def read_sites_file(f):
+    next(f)
+    for row in csv.reader(f):
+        url = row[1].strip().strip("/")
+        courses = int(row[2] or 0)
+        if not url.startswith("http"):
+            url = "http://" + url
+        yield url, courses
+
+def read_sites(csv_file, ignore=None):
+    ignored = set()
+    if ignore:
+        with open(ignore) as f:
+            for url, _ in read_sites_file(f):
+                ignored.add(url)
     with open(csv_file) as f:
-        next(f)
-        for row in csv.reader(f):
-            url = row[1].strip().strip("/")
-            courses = int(row[2] or 0)
-            if not url.startswith("http"):
-                url = "http://" + url
-            yield Site(url, courses)
+        for url, courses in read_sites_file(f):
+            if url not in ignored:
+                yield Site(url, courses)
 
 @click.command(help=__doc__)
 @click.option('--min', type=int, default=1)
 @click.option('--format', type=click.Choice(['text', 'html']), default='text')
 @click.argument('site_patterns', nargs=-1)
 def main(min, format, site_patterns):
-    sites = list(read_sites("sites.csv"))
+    sites = list(read_sites("sites.csv", ignore="ignore.csv"))
     sites = [s for s in sites if s.latest_courses >= min]
     if site_patterns:
         sites = [s for s in sites if any(re.search(p, s.url) for p in site_patterns)]
