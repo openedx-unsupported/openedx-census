@@ -153,15 +153,22 @@ def main(min, format, site_patterns):
                 pre {
                     font-family: Consolas, monospace;
                 }
+
+                .url {
+                    font-weight: bold;
+                }
+                .strategy {
+                    font-style: italic;
+                }
             """
 
             writer = HtmlOutlineWriter(htmlout, css=CSS)
             for site in sites_descending:
-                writer.start_section(escape(f"{site.url}: {site.latest_courses} --> {site.current_courses}"))
+                writer.start_section(f"<span class='url'>{site.url}</span>: {site.latest_courses} &rarr; {site.current_courses}")
                 for strategy, tb in site.tried:
                     if tb is not None:
                         line = tb.splitlines()[-1][:100]
-                        writer.start_section(escape(f"{strategy}: {line}"))
+                        writer.start_section(f"<span class='strategy'>{strategy}:</span> {escape(line)}")
                         writer.write("""<pre class="stdout">""")
                         writer.write(escape(tb))
                         writer.write("""</pre>""")
