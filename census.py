@@ -6,11 +6,13 @@ import logging
 import pprint
 import re
 import traceback
+from xml.sax.saxutils import escape
 
 import aiohttp
 import attr
 import click
 
+from html_writer import HtmlOutlineWriter
 from site_patterns import find_site_functions
 
 # We don't use anything from this module, it just registers all the parsers.
@@ -130,8 +132,10 @@ def main(min, format, site_patterns):
 
     get_urls(sites)
 
+    sites_descending = sorted(sites, key=lambda s: s.latest_courses, reverse=True)
+
     if format == 'text':
-        for site in sorted(sites, key=lambda s: s.latest_courses, reverse=True):
+        for site in sites_descending:
             print(f"{site.url}: {site.latest_courses} --> {site.current_courses}")
             for strategy, tb in site.tried:
                 if tb is not None:
@@ -140,7 +144,21 @@ def main(min, format, site_patterns):
                     line = "Worked"
                 print(f"    {strategy}: {line}")
     elif format == 'html':
-        print("HTML!")
+        with open("sites.html", "w") as htmlout:
+            writer = HtmlOutlineWriter(htmlout)
+            for site in sites_descending:
+                writer.start_section(f"{site.url}: {site.latest_courses} --> {site.current_courses}")
+                for strategy, tb in site.tried:
+                    if tb is not None:
+                        line = tb.splitlines()[-1]
+                        writer.start_section(f"{strategy}: {line}")
+                        writer.write("""<pre class="stdout">""")
+                        writer.write(escape(tb))
+                        writer.write("""</pre>""")
+                        writer.end_section()
+                    else:
+                        writer.write(f"<p>{strategy}: worked</p>")
+                writer.end_section()
 
     old = new = 0
     for site in sites:
