@@ -124,7 +124,10 @@ def main(min, site_patterns):
     get_urls(sites)
 
     for site in sorted(sites, key=lambda s: s.latest_courses, reverse=True):
-        print(site)
+        if site.error:
+            print(f"{site.url}: {site.error}")
+        else:
+            print(f"{site.url}: {site.latest_courses} --> {site.current_courses}")
 
     old = new = 0
     for site in sites:
