@@ -10,7 +10,7 @@ import aiohttp
 import attr
 import click
 
-from site_patterns import find_site_function
+from site_patterns import find_site_functions
 
 # We don't use anything from this module, it just registers all the parsers.
 import sites
@@ -23,8 +23,10 @@ class Site:
     url = attr.ib()
     latest_courses = attr.ib()
     current_courses = attr.ib(default=None)
-    error = attr.ib(default=None)
+    tried = attr.ib(default=attr.Factory(list))
 
+
+GET_KWARGS = dict(verify_ssl=False)
 
 class SmartSession:
     def __init__(self, session):
@@ -36,7 +38,7 @@ class SmartSession:
     async def text_from_url(self, url, came_from=None, method='get', save=False):
         headers = {}
         if came_from:
-            async with self.session.get(came_from) as resp:
+            async with self.session.get(came_from, **GET_KWARGS) as resp:
                 real_url = str(resp.url)
                 x = await resp.read()
             cookies = self.session.cookie_jar.filter_cookies(url)
@@ -45,7 +47,7 @@ class SmartSession:
 
             headers['Referer'] = real_url
 
-        async with getattr(self.session, method)(url, headers=headers) as response:
+        async with getattr(self.session, method)(url, headers=headers, **GET_KWARGS) as response:
             text = await response.read()
 
         if save:
@@ -54,7 +56,7 @@ class SmartSession:
         return text
 
     async def real_url(self, url):
-        async with self.session.get(url) as resp:
+        async with self.session.get(url, **GET_KWARGS) as resp:
             return str(resp.url)
 
 
@@ -63,16 +65,19 @@ USER_AGENT = "Open edX census-taker. Tell us about your site: oscm+census@edx.or
 
 
 async def fetch(site, session):
-    try:
-        parser = find_site_function(site.url)
-        site.current_courses = await parser(site, session)
-        print(".", end='', flush=True)
-        return True
-    except Exception as exc:
-        #log.exception(f"Couldn't fetch {site.url}")
-        site.error = str(exc)
+    for parser in find_site_functions(site.url):
+        try:
+            site.current_courses = await parser(site, session)
+        except Exception as exc:
+            #log.exception(f"Couldn't fetch {site.url}")
+            site.tried.append((parser.__name__, str(exc)))
+        else:
+            site.tried.append((parser.__name__, None))
+            print(".", end='', flush=True)
+            break
+    else:
         print("X", end='', flush=True)
-        return False
+
 
 async def throttled_fetch(site, session, sem):
     async with sem:
@@ -124,10 +129,7 @@ def main(min, site_patterns):
     get_urls(sites)
 
     for site in sorted(sites, key=lambda s: s.latest_courses, reverse=True):
-        if site.error:
-            print(f"{site.url}: {site.error}")
-        else:
-            print(f"{site.url}: {site.latest_courses} --> {site.current_courses}")
+        print(f"{site.url}: {site.latest_courses} --> {site.current_courses}: {site.tried}")
 
     old = new = 0
     for site in sites:

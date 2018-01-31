@@ -10,9 +10,7 @@ def matches(pattern):
         return func
     return _decorator
 
-def find_site_function(url):
+def find_site_functions(url):
     for pattern, func in SITE_PATTERNS:
         if pattern.search(url):
-            return func
-    else:
-        raise Exception(f"No match for {url}")
+            yield func

@@ -8,7 +8,7 @@ from site_patterns import matches
 
 # XuetangX: add up courses by institution.
 @matches(r"www\.xuetangx\.com$")
-async def parser(site, session):
+async def xuetang_parser(site, session):
     url = "http://www.xuetangx.com/partners"
     text = await session.text_from_url(url)
     section = elements_by_xpath(text, "/html/body/article[1]/section")
@@ -25,21 +25,21 @@ async def parser(site, session):
 
 # FUN has an api that returns a count.
 @matches(r"france-universite-numerique-mooc\.fr$")
-async def parser(site, session):
+async def fun_parser(site, session):
     url = "https://www.fun-mooc.fr/fun/api/courses/?rpp=50&page=1"
     text = await session.text_from_url(url)
     data = json.loads(text)
     return data['count']
 
 @matches(r"courses.openedu.tw$")
-async def parser(site, session):
+async def openedu_tw_parser(site, session):
     url = "https://www.openedu.tw/rest/courses/query"
     text = await session.text_from_url(url)
     data = json.loads(text)
     return len(data)
 
 @matches(r"openedu.ru$")
-async def parser(site, session):
+async def openedu_ru_parser(site, session):
     url = "https://openedu.ru/course/"
     text = await session.text_from_url(url)
     count = elements_by_css(text, "span#courses-found")[0]
@@ -48,6 +48,7 @@ async def parser(site, session):
 
 @matches(r"puroom.net$")
 @matches(r"pok.polimi.it$")
+@matches(r".")
 async def course_discovery_post(site, session):
     real_url = await session.real_url(site.url)
     url0 = urllib.parse.urljoin(real_url, '/courses')
@@ -55,10 +56,13 @@ async def course_discovery_post(site, session):
     text = await session.text_from_url(url, came_from=url0, method='post')
     data = json.loads(text)
     count = data["total"]
+    if count == 0:
+        # Seems like we didn't get a usable answer.
+        raise Exception("got zero")
     return count
 
 @matches(r"gacco.org$")
-async def parser(site, session):
+async def gacco_parser(site, session):
     url = "http://gacco.org/data/course/gacco_list.json"
     text = await session.text_from_url(url)
     data = json.loads(text)
@@ -70,9 +74,6 @@ async def parser(site, session):
     count += len(data["archived_courses"])
     return count
 
-@matches(r"courses.zsmu.edu.ua")
-@matches(r"lms.mitx.mit.edu")
-@matches(r"memooc\.hu$")
 @matches(r".")
 async def courses_page_full_of_tiles(site, session):
     url = urllib.parse.urljoin(site.url, "/courses")
