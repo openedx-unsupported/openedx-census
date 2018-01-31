@@ -10,6 +10,7 @@ import traceback
 from xml.sax.saxutils import escape
 
 import aiohttp
+import async_timeout
 import attr
 import click
 
@@ -65,24 +66,26 @@ class SmartSession:
             return str(resp.url)
 
 
-MAX_CLIENTS = 200
+MAX_CLIENTS = 500
+TIMEOUT = 20
 USER_AGENT = "Open edX census-taker. Tell us about your site: oscm+census@edx.org"
 
 
 async def fetch(site, session):
     start = time.time()
-    for parser in find_site_functions(site.url):
-        try:
-            site.current_courses = await parser(site, session)
-        except Exception as exc:
-            #log.exception(f"Couldn't fetch {site.url}")
-            site.tried.append((parser.__name__, traceback.format_exc()))
+    with async_timeout.timeout(TIMEOUT):
+        for parser in find_site_functions(site.url):
+            try:
+                site.current_courses = await parser(site, session)
+            except Exception as exc:
+                #log.exception(f"Couldn't fetch {site.url}")
+                site.tried.append((parser.__name__, traceback.format_exc()))
+            else:
+                site.tried.append((parser.__name__, None))
+                print(".", end='', flush=True)
+                break
         else:
-            site.tried.append((parser.__name__, None))
-            print(".", end='', flush=True)
-            break
-    else:
-        print("X", end='', flush=True)
+            print("X", end='', flush=True)
     site.time = time.time() - start
 
 
