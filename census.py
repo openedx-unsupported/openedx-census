@@ -97,7 +97,7 @@ async def run(sites):
     headers = {
         'User-Agent': USER_AGENT,
     }
-    async with aiohttp.ClientSession(headers=headers) as session:
+    async with aiohttp.ClientSession(headers=headers, raise_for_status=True) as session:
         smart = SmartSession(session)
         for site in sites:
             task = asyncio.ensure_future(throttled_fetch(site, smart, sem))
