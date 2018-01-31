@@ -112,7 +112,7 @@ def read_sites(csv_file):
             yield Site(url, courses)
 
 @click.command(help=__doc__)
-@click.option('--min', type=int, default=100)
+@click.option('--min', type=int, default=1)
 @click.argument('site_patterns', nargs=-1)
 def main(min, site_patterns):
     sites = list(read_sites("sites.csv"))
