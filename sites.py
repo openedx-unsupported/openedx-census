@@ -75,8 +75,11 @@ async def course_discovery_post(site, session):
     url0 = urllib.parse.urljoin(real_url, '/courses')
     url = urllib.parse.urljoin(real_url, '/search/course_discovery/')
     text = await session.text_from_url(url, came_from=url0, method='post')
-    data = json.loads(text)
-    count = data["total"]
+    try:
+        data = json.loads(text)
+        count = data["total"]
+    except Exception:
+        raise Exception(f"Couldn't parse result from json: {text!r}")
     if count == 0:
         raise Exception("got zero")
     return count
