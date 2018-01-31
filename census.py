@@ -5,6 +5,7 @@ import csv
 import logging
 import pprint
 import re
+import traceback
 
 import aiohttp
 import attr
@@ -70,7 +71,7 @@ async def fetch(site, session):
             site.current_courses = await parser(site, session)
         except Exception as exc:
             #log.exception(f"Couldn't fetch {site.url}")
-            site.tried.append((parser.__name__, str(exc)))
+            site.tried.append((parser.__name__, traceback.format_exc()))
         else:
             site.tried.append((parser.__name__, None))
             print(".", end='', flush=True)
@@ -118,8 +119,9 @@ def read_sites(csv_file):
 
 @click.command(help=__doc__)
 @click.option('--min', type=int, default=1)
+@click.option('--format', type=click.Choice(['text', 'html']), default='text')
 @click.argument('site_patterns', nargs=-1)
-def main(min, site_patterns):
+def main(min, format, site_patterns):
     sites = list(read_sites("sites.csv"))
     sites = [s for s in sites if s.latest_courses >= min]
     if site_patterns:
@@ -128,8 +130,17 @@ def main(min, site_patterns):
 
     get_urls(sites)
 
-    for site in sorted(sites, key=lambda s: s.latest_courses, reverse=True):
-        print(f"{site.url}: {site.latest_courses} --> {site.current_courses}: {site.tried}")
+    if format == 'text':
+        for site in sorted(sites, key=lambda s: s.latest_courses, reverse=True):
+            print(f"{site.url}: {site.latest_courses} --> {site.current_courses}")
+            for strategy, tb in site.tried:
+                if tb is not None:
+                    line = tb.splitlines()[-1]
+                else:
+                    line = "Worked"
+                print(f"    {strategy}: {line}")
+    elif format == 'html':
+        print("HTML!")
 
     old = new = 0
     for site in sites:
