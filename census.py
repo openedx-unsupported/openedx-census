@@ -145,7 +145,17 @@ def main(min, format, site_patterns):
                 print(f"    {strategy}: {line}")
     elif format == 'html':
         with open("sites.html", "w") as htmlout:
-            writer = HtmlOutlineWriter(htmlout)
+            CSS = """\
+                html {
+                    font-family: sans-serif;
+                }
+
+                pre {
+                    font-family: Consolas, monospace;
+                }
+            """
+
+            writer = HtmlOutlineWriter(htmlout, css=CSS)
             for site in sites_descending:
                 writer.start_section(f"{site.url}: {site.latest_courses} --> {site.current_courses}")
                 for strategy, tb in site.tried:

@@ -9,9 +9,6 @@ class HtmlOutlineWriter:
         <head>
         <meta charset="utf-8" />
         <style>
-        html {
-            font-family: sans-serif;
-        }
         .toggle-box {
             display: none;
         }
@@ -30,6 +27,7 @@ class HtmlOutlineWriter:
 
         .toggle-box:checked + label + div {
             display: block;
+            padding-left: 2em;
         }
 
         .toggle-box + label:before {
@@ -48,22 +46,8 @@ class HtmlOutlineWriter:
             content: "\25BE";
         }
 
-        .error, .skipped {
-            margin-left: 2em;
-        }
+        [[CSS]]
 
-        .count {
-            font-weight: bold;
-        }
-
-        .test {
-            margin-left: 2em;
-        }
-
-        .stdout {
-            margin-left: 2em;
-            font-family: Consolas, monospace;
-        }
         </style>
         </head>
         <body>
@@ -78,10 +62,10 @@ class HtmlOutlineWriter:
 
     SECTION_END = "</div></div>"
 
-    def __init__(self, fout):
+    def __init__(self, fout, css=""):
         self.fout = fout
         self.section_id = 0
-        self.fout.write(self.HEAD)
+        self.fout.write(self.HEAD.replace("[[CSS]]", textwrap.dedent(css)))
 
     def start_section(self, html, klass=None):
         self.fout.write(self.SECTION_START.format(
