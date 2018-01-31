@@ -181,7 +181,7 @@ def main(min, format, site_patterns):
 
             writer = HtmlOutlineWriter(htmlout, css=CSS)
             for site in sites_descending:
-                writer.start_section(f"<span class='url'>{site.url}</span>: {site.latest_courses} &rarr; {site.current_courses} ({site.time:.1f}s)")
+                writer.start_section(f"<a class='url' href='{site.url}'>{site.url}</a>: {site.latest_courses} &rarr; {site.current_courses} ({site.time:.1f}s)")
                 for strategy, tb in site.tried:
                     if tb is not None:
                         line = tb.splitlines()[-1][:100]
