@@ -36,10 +36,22 @@ class Site:
 
 GET_KWARGS = dict(verify_ssl=False)
 
+USER_AGENT = "Open edX census-taker. Tell us about your site: oscm+census@edx.org"
+
 class SmartSession:
-    def __init__(self, session):
-        self.session = session
+    def __init__(self):
+        headers = {
+            'User-Agent': USER_AGENT,
+        }
+        self.session = aiohttp.ClientSession(headers=headers, raise_for_status=True)
         self.save_numbers = itertools.count()
+
+    async def __aenter__(self):
+        await self.session.__aenter__()
+        return self
+
+    async def __aexit__(self, exc_type, exc_val, exc_tb):
+        await self.session.__aexit__(exc_type, exc_val, exc_tb)
 
     def __getattr__(self, name):
         return getattr(self.session, name)
@@ -71,7 +83,6 @@ class SmartSession:
 
 MAX_CLIENTS = 500
 TIMEOUT = 20
-USER_AGENT = "Open edX census-taker. Tell us about your site: oscm+census@edx.org"
 
 
 async def fetch(site, session):
@@ -100,13 +111,9 @@ async def run(sites):
     tasks = []
     sem = asyncio.Semaphore(MAX_CLIENTS)
 
-    headers = {
-        'User-Agent': USER_AGENT,
-    }
-    async with aiohttp.ClientSession(headers=headers, raise_for_status=True) as session:
-        smart = SmartSession(session)
+    async with SmartSession() as session:
         for site in sites:
-            task = asyncio.ensure_future(throttled_fetch(site, smart, sem))
+            task = asyncio.ensure_future(throttled_fetch(site, session, sem))
             tasks.append(task)
 
         responses = await asyncio.gather(*tasks)
