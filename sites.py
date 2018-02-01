@@ -113,6 +113,16 @@ async def hku_nursing_parser(site, session):
     count = len(data)
     return count
 
+@matches(r"iitbombayx.in$")
+async def iitbombayx_parser(site, session):
+    url = "https://iitbombayx.in/courses"
+    text = await session.text_from_url(url)
+    elts = elements_by_css(text, "#block-timeline-2 .facet-item__count")
+    count = 0
+    for elt in elts:
+        count += int(elt.text.strip("()"))
+    return count
+
 
 # Generic parsers
 
