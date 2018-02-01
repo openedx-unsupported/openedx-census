@@ -90,22 +90,36 @@ async def vlabs_parser(site, session):
 @matches(r"enlightme.net$")
 async def enlightme_parser(site, session):
     url = "https://www.enlightme.net/courses/"
-    text = await session.text_from_url(url, save=True)
+    text = await session.text_from_url(url)
     elt = elements_by_css(text, ".course-index span")[0]
     words = elt.text.strip().split()
     assert words[:3] == ["Showing", "1-10", "of"]
     count = int(words[3])
     return count
 
-@matches(r".")
-async def courses_page_full_of_tiles(site, session):
-    url = urllib.parse.urljoin(site.url, "/courses")
+@matches(r"zadi.net$")
+async def zadi_net_parser(site, session):
+    url = "https://zadi.net/courses"
+    text = await session.text_from_url(url)
+    # I don't know how to get the count from here....!
+    return 0
+
+async def count_tiles(url, session):
     text = await session.text_from_url(url)
     li = elements_by_css(text, ".courses ul.courses-listing > li")
     count = len(li)
     if count == 0:
         raise Exception("got zero")
     return count
+
+@matches(r".")
+async def courses_page_full_of_tiles(site, session):
+    url = urllib.parse.urljoin(site.url, "/courses")
+    return await count_tiles(url, session)
+
+@matches(r".")
+async def home_page_full_of_tiles(site, session):
+    return await count_tiles(site.url, session)
 
 @matches(r".")
 async def course_discovery_post(site, session):

@@ -3,6 +3,7 @@
 import asyncio
 import csv
 import logging
+import os
 import pprint
 import re
 import time
@@ -56,7 +57,7 @@ class SmartSession:
         async with getattr(self.session, method)(url, headers=headers, **GET_KWARGS) as response:
             text = await response.read()
 
-        if save:
+        if save or int(os.environ.get('SAVE', 0)):
             with open("save.html", "wb") as f:
                 f.write(text)
         return text
