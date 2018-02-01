@@ -1,6 +1,7 @@
 """Visit Open edX sites and count their courses."""
 
 import asyncio
+import collections
 import csv
 import itertools
 import logging
@@ -30,6 +31,7 @@ class Site:
     url = attr.ib()
     latest_courses = attr.ib()
     current_courses = attr.ib(default=None)
+    course_ids = attr.ib(default=attr.Factory(collections.Counter))
     tried = attr.ib(default=attr.Factory(list))
     time = attr.ib(default=None)
 
@@ -206,6 +208,13 @@ def main(min, format, site_patterns):
             old += site.latest_courses
             new += site.current_courses
     print(f"Found courses went from {old} to {new}")
+
+    all_course_ids = collections.Counter()
+    for site in sites:
+        all_course_ids += site.course_ids
+    print("Duplicate courses:")
+    for course_id, num in all_course_ids.most_common(100):
+        print(f"{course_id}: {num}")
 
 if __name__ == '__main__':
     main()

@@ -123,22 +123,26 @@ async def hku_nursing_parser(site, session):
 
 # Generic parsers
 
-async def count_tiles(url, session):
+async def count_tiles(url, site, session):
     text = await session.text_from_url(url)
-    li = elements_by_css(text, ".courses ul.courses-listing > li")
-    count = len(li)
+    elts = elements_by_css(text, ".courses ul.courses-listing > li")
+    count = len(elts)
     if count == 0:
         raise Exception("got zero")
+    # Try to get the course ids also!
+    for elt in elts:
+        course_id = elt.xpath("article/@id")[0]
+        site.course_ids[course_id] += 1
     return count
 
 @matches(r".")
 async def courses_page_full_of_tiles(site, session):
     url = urllib.parse.urljoin(site.url, "/courses")
-    return await count_tiles(url, session)
+    return await count_tiles(url, site, session)
 
 @matches(r".")
 async def home_page_full_of_tiles(site, session):
-    return await count_tiles(site.url, session)
+    return await count_tiles(site.url, site, session)
 
 @matches(r".")
 async def course_discovery_post(site, session):
