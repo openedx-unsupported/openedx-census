@@ -157,12 +157,35 @@ async def count_tiles(url, site, session):
     elts = elements_by_css(text, ".courses ul.courses-listing > li")
     count = len(elts)
     if count == 0:
-        raise Exception("got zero")
+        elts = elements_by_css(text, ".courses-listing-item")
+        count = len(elts)
+        if count == 0:
+            raise Exception("got zero")
     # Try to get the course ids also!
     try:
         for elt in elts:
             course_id = elt.xpath("article/@id")[0]
             site.course_ids[course_id] += 1
+    except Exception:
+        pass
+    return count
+
+@matches(r".")
+async def course_discovery_post(site, session):
+    real_url = await session.real_url(site.url)
+    url0 = urllib.parse.urljoin(real_url, '/courses')
+    url = urllib.parse.urljoin(real_url, '/search/course_discovery/')
+    text = await session.text_from_url(url, came_from=url0, method='post')
+    try:
+        data = json.loads(text)
+    except Exception:
+        raise Exception(f"Couldn't parse result from json: {text[:100]!r}")
+    count = data["total"]
+    if count == 0:
+        raise Exception("got zero")
+    try:
+        for course in data["results"]:
+            site.course_ids[course["_id"]] += 1
     except Exception:
         pass
     return count
@@ -175,18 +198,3 @@ async def courses_page_full_of_tiles(site, session):
 @matches(r".")
 async def home_page_full_of_tiles(site, session):
     return await count_tiles(site.url, site, session)
-
-@matches(r".")
-async def course_discovery_post(site, session):
-    real_url = await session.real_url(site.url)
-    url0 = urllib.parse.urljoin(real_url, '/courses')
-    url = urllib.parse.urljoin(real_url, '/search/course_discovery/')
-    text = await session.text_from_url(url, came_from=url0, method='post')
-    try:
-        data = json.loads(text)
-        count = data["total"]
-    except Exception:
-        raise Exception(f"Couldn't parse result from json: {text!r}")
-    if count == 0:
-        raise Exception("got zero")
-    return count
