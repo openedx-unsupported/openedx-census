@@ -141,9 +141,12 @@ async def count_tiles(url, site, session):
     if count == 0:
         raise Exception("got zero")
     # Try to get the course ids also!
-    for elt in elts:
-        course_id = elt.xpath("article/@id")[0]
-        site.course_ids[course_id] += 1
+    try:
+        for elt in elts:
+            course_id = elt.xpath("article/@id")[0]
+            site.course_ids[course_id] += 1
+    except Exception:
+        pass
     return count
 
 @matches(r".")
