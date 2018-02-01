@@ -151,67 +151,25 @@ def read_sites(csv_file, ignore=None):
 @click.option('--format', type=click.Choice(['text', 'html']), default='text')
 @click.argument('site_patterns', nargs=-1)
 def main(min, format, site_patterns):
+    # Make the list of sites we're going to scrape.
     sites = list(read_sites("sites.csv", ignore="ignore.csv"))
     sites = [s for s in sites if s.latest_courses >= min]
     if site_patterns:
         sites = [s for s in sites if any(re.search(p, s.url) for p in site_patterns)]
     print(f"{len(sites)} sites")
 
+    # SCRAPE!
     get_urls(sites)
 
+    # Prep data for reporting.
     sites_descending = sorted(sites, key=lambda s: s.latest_courses, reverse=True)
-
-    if format == 'text':
-        for site in sites_descending:
-            print(f"{site.url}: {site.latest_courses} --> {site.current_courses}")
-            for strategy, tb in site.tried:
-                if tb is not None:
-                    line = tb.splitlines()[-1]
-                else:
-                    line = "Worked"
-                print(f"    {strategy}: {line}")
-    elif format == 'html':
-        with open("sites.html", "w") as htmlout:
-            CSS = """\
-                html {
-                    font-family: sans-serif;
-                }
-
-                pre {
-                    font-family: Consolas, monospace;
-                }
-
-                .url {
-                    font-weight: bold;
-                }
-                .strategy {
-                    font-style: italic;
-                }
-            """
-
-            writer = HtmlOutlineWriter(htmlout, css=CSS)
-            for site in sites_descending:
-                writer.start_section(f"<a class='url' href='{site.url}'>{site.url}</a>: {site.latest_courses} &rarr; {site.current_courses} ({site.time:.1f}s)")
-                for strategy, tb in site.tried:
-                    if tb is not None:
-                        line = tb.splitlines()[-1][:100]
-                        writer.start_section(f"<span class='strategy'>{strategy}:</span> {escape(line)}")
-                        writer.write("""<pre class="stdout">""")
-                        writer.write(escape(tb))
-                        writer.write("""</pre>""")
-                        writer.end_section()
-                    else:
-                        writer.write(f"<p>{strategy}: worked</p>")
-                writer.end_section()
-
     old = new = 0
     for site in sites:
         if site.current_courses:
             old += site.latest_courses
             new += site.current_courses
-    print(f"Found courses went from {old} to {new}")
 
-    all_courses = collections.Counter()
+    all_courses = collections.defaultdict(list)
     all_course_ids = set()
     for site in sites:
         for course_id, num in site.course_ids.items():
@@ -222,13 +180,75 @@ def main(min, format, site_patterns):
                 course = course_id
             else:
                 course = f"{key.org}+{key.course}"
-            all_courses[course] += num
-    print("Duplicate courses:")
-    for course_id, num in all_courses.most_common(100):
-        print(f"{course_id}: {num}")
+            all_courses[course].append(site)
 
     with open("course-ids.txt", "w") as f:
         f.write("".join(i + "\n" for i in sorted(all_course_ids)))
+
+
+    if format == 'text':
+        reporter = text_report
+    elif format == 'html':
+        reporter = html_report
+    reporter(sites_descending, old, new, all_courses)
+
+
+def text_report(sites, old, new, all_courses):
+    print(f"Found courses went from {old} to {new}")
+    for site in sites:
+        print(f"{site.url}: {site.latest_courses} --> {site.current_courses}")
+        for strategy, tb in site.tried:
+            if tb is not None:
+                line = tb.splitlines()[-1]
+            else:
+                line = "Worked"
+            print(f"    {strategy}: {line}")
+
+def html_report(sites, old, new, all_courses):
+    with open("sites.html", "w") as htmlout:
+        CSS = """\
+            html {
+                font-family: sans-serif;
+            }
+
+            pre {
+                font-family: Consolas, monospace;
+            }
+
+            .url {
+                font-weight: bold;
+            }
+            .strategy {
+                font-style: italic;
+            }
+        """
+
+        writer = HtmlOutlineWriter(htmlout, css=CSS)
+        writer.start_section(f"{len(sites)} sites: {old} &rarr; {new}")
+        for site in sites:
+            writer.start_section(f"<a class='url' href='{site.url}'>{site.url}</a>: {site.latest_courses} &rarr; {site.current_courses} ({site.time:.1f}s)")
+            for strategy, tb in site.tried:
+                if tb is not None:
+                    line = tb.splitlines()[-1][:100]
+                    writer.start_section(f"<span class='strategy'>{strategy}:</span> {escape(line)}")
+                    writer.write("""<pre class="stdout">""")
+                    writer.write(escape(tb))
+                    writer.write("""</pre>""")
+                    writer.end_section()
+                else:
+                    writer.write(f"<p>{strategy}: worked</p>")
+            writer.end_section()
+        writer.end_section()
+
+        total_course_ids = sum(len(sites) for sites in all_courses.values())
+        writer.start_section(f"<p>Course IDs: {total_course_ids}</p>")
+        all_courses_items = sorted(all_courses.items(), key=lambda item: len(item[1]), reverse=True)
+        for course_id, sites in all_courses_items:
+            writer.start_section(f"{course_id}: {len(sites)}")
+            for site in sites:
+                writer.write(f"<p><a class='url' href='{site.url}'>{site.url}</a></p>")
+            writer.end_section()
+        writer.end_section()
 
 if __name__ == '__main__':
     main()
