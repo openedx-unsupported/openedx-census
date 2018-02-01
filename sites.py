@@ -97,13 +97,6 @@ async def enlightme_parser(site, session):
     count = int(words[3])
     return count
 
-@matches(r"zadi.net$")
-async def zadi_net_parser(site, session):
-    url = "https://zadi.net/courses"
-    text = await session.text_from_url(url)
-    # I don't know how to get the count from here....!
-    return 0
-
 @matches(r"skills.med.hku.hk$")
 async def hku_hk_parser(site, session):
     url = "https://skills.med.hku.hk/mbbs_admin/public/downloadMbbsJsonFile"
