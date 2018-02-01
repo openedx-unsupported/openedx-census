@@ -113,6 +113,14 @@ async def hku_nursing_parser(site, session):
     count = len(data)
     return count
 
+@matches(r"learning.hku.hk$")
+async def learning_hku_parser(site, session):
+    url = "https://learning.hku.hk/catalog/all-courses/"
+    text = await session.text_from_url(url)
+    elt = elements_by_css(text, "li#course-all span")[0]
+    count = int(elt.text)
+    return count
+
 @matches(r"iitbombayx.in$")
 async def iitbombayx_parser(site, session):
     url = "https://iitbombayx.in/courses"
