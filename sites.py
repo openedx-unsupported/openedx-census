@@ -131,6 +131,16 @@ async def iitbombayx_parser(site, session):
         count += int(elt.text.strip("()"))
     return count
 
+@matches(r"edraak.org$")
+async def edraak_org_parser(site, session):
+    url = "https://www.edraak.org/en/courses/"
+    text = await session.text_from_url(url)
+    elts = elements_by_css(text, "aside.all-courses div.course span")
+    count = 0
+    for elt in elts:
+        count += int(elt.text.strip(" ()"))
+    return count
+
 
 # Generic parsers
 
