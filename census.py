@@ -28,7 +28,7 @@ import sites
 
 log = logging.getLogger(__name__)
 
-@attr.s
+@attr.s(cmp=False, frozen=False)
 class Site:
     url = attr.ib()
     latest_courses = attr.ib()
@@ -36,6 +36,12 @@ class Site:
     course_ids = attr.ib(default=attr.Factory(collections.Counter))
     tried = attr.ib(default=attr.Factory(list))
     time = attr.ib(default=None)
+
+    def __eq__(self, other):
+        return self.url == other.url
+
+    def __hash__(self):
+        return hash(self.url)
 
 
 GET_KWARGS = dict(verify_ssl=False)
@@ -165,11 +171,10 @@ def main(min, format, site_patterns):
     sites_descending = sorted(sites, key=lambda s: s.latest_courses, reverse=True)
     old = new = 0
     for site in sites:
-        if site.current_courses:
-            old += site.latest_courses
-            new += site.current_courses
+        old += site.latest_courses
+        new += site.current_courses or site.latest_courses
 
-    all_courses = collections.defaultdict(list)
+    all_courses = collections.defaultdict(set)
     all_course_ids = set()
     for site in sites:
         for course_id, num in site.course_ids.items():
@@ -180,7 +185,7 @@ def main(min, format, site_patterns):
                 course = course_id
             else:
                 course = f"{key.org}+{key.course}"
-            all_courses[course].append(site)
+            all_courses[course].add(site)
 
     with open("course-ids.txt", "w") as f:
         f.write("".join(i + "\n" for i in sorted(all_course_ids)))
