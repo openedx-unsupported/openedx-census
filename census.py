@@ -39,7 +39,7 @@ GET_KWARGS = dict(verify_ssl=False)
 class SmartSession:
     def __init__(self, session):
         self.session = session
-        self.count = itertools.count()
+        self.save_numbers = itertools.count()
 
     def __getattr__(self, name):
         return getattr(self.session, name)
@@ -60,7 +60,7 @@ class SmartSession:
             text = await response.read()
 
         if save or int(os.environ.get('SAVE', 0)):
-            with open("save{}.html".format(next(self.count)), "wb") as f:
+            with open("save{}.html".format(next(self.save_numbers)), "wb") as f:
                 f.write(text)
         return text
 
