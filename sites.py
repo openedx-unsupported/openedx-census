@@ -77,6 +77,15 @@ async def millionlights_parser(site, session):
     count = len(data)
     return count
 
+@matches(r"vlabs.ac.in$")
+async def vlabs_parser(site, session):
+    url = "https://vlabs.ac.in/"
+    text = await session.text_from_url(url)
+    elt = elements_by_css(text, "div.features div:first-child div h3")[0]
+    words = elt.text.strip().split()
+    assert words[0] == "Labs"
+    count = int(words[1])
+    return count
 
 @matches(r".")
 async def courses_page_full_of_tiles(site, session):
