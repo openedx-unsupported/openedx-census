@@ -5,3 +5,4 @@ lxml
 async_timeout
 cssselect
 click
+edx-opaque-keys

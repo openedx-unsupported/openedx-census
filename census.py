@@ -16,6 +16,8 @@ import aiohttp
 import async_timeout
 import attr
 import click
+import opaque_keys
+import opaque_keys.edx.keys
 
 from html_writer import HtmlOutlineWriter
 from site_patterns import find_site_functions
@@ -209,12 +211,24 @@ def main(min, format, site_patterns):
             new += site.current_courses
     print(f"Found courses went from {old} to {new}")
 
-    all_course_ids = collections.Counter()
+    all_courses = collections.Counter()
+    all_course_ids = set()
     for site in sites:
-        all_course_ids += site.course_ids
+        for course_id, num in site.course_ids.items():
+            all_course_ids.add(course_id)
+            try:
+                key = opaque_keys.edx.keys.CourseKey.from_string(course_id)
+            except opaque_keys.InvalidKeyError:
+                course = course_id
+            else:
+                course = f"{key.org}+{key.course}"
+            all_courses[course] += num
     print("Duplicate courses:")
-    for course_id, num in all_course_ids.most_common(100):
+    for course_id, num in all_courses.most_common(100):
         print(f"{course_id}: {num}")
+
+    with open("course-ids.txt", "w") as f:
+        f.write("".join(i + "\n" for i in sorted(all_course_ids)))
 
 if __name__ == '__main__':
     main()
