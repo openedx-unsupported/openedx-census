@@ -85,27 +85,23 @@ MAX_CLIENTS = 500
 TIMEOUT = 20
 
 
-async def fetch(site, session):
-    start = time.time()
-    with async_timeout.timeout(TIMEOUT):
-        for parser in find_site_functions(site.url):
-            try:
-                site.current_courses = await parser(site, session)
-            except Exception as exc:
-                #log.exception(f"Couldn't fetch {site.url}")
-                site.tried.append((parser.__name__, traceback.format_exc()))
-            else:
-                site.tried.append((parser.__name__, None))
-                print(".", end='', flush=True)
-                break
-        else:
-            print("X", end='', flush=True)
-    site.time = time.time() - start
-
-
-async def throttled_fetch(site, session, sem):
+async def parse_site(site, session, sem):
     async with sem:
-        return await fetch(site, session)
+        start = time.time()
+        with async_timeout.timeout(TIMEOUT):
+            for parser in find_site_functions(site.url):
+                try:
+                    site.current_courses = await parser(site, session)
+                except Exception as exc:
+                    site.tried.append((parser.__name__, traceback.format_exc()))
+                else:
+                    site.tried.append((parser.__name__, None))
+                    print(".", end='', flush=True)
+                    break
+            else:
+                print("X", end='', flush=True)
+        site.time = time.time() - start
+
 
 async def run(sites):
     tasks = []
@@ -113,7 +109,7 @@ async def run(sites):
 
     async with SmartSession() as session:
         for site in sites:
-            task = asyncio.ensure_future(throttled_fetch(site, session, sem))
+            task = asyncio.ensure_future(parse_site(site, session, sem))
             tasks.append(task)
 
         responses = await asyncio.gather(*tasks)
