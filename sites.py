@@ -141,6 +141,14 @@ async def edraak_org_parser(site, session):
         count += int(elt.text.strip(" ()"))
     return count
 
+@matches(r"labster.com$")
+async def labster_com_parser(site, session):
+    url = "https://www.labster.com/simulations/"
+    text = await session.text_from_url(url)
+    elts = elements_by_css(text, ".md-simulation-card")
+    count = len(elts)
+    return count
+
 
 # Generic parsers
 
