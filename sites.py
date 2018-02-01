@@ -87,6 +87,16 @@ async def vlabs_parser(site, session):
     count = int(words[1])
     return count
 
+@matches(r"enlightme.net$")
+async def enlightme_parser(site, session):
+    url = "https://www.enlightme.net/courses/"
+    text = await session.text_from_url(url, save=True)
+    elt = elements_by_css(text, ".course-index span")[0]
+    words = elt.text.strip().split()
+    assert words[:3] == ["Showing", "1-10", "of"]
+    count = int(words[3])
+    return count
+
 @matches(r".")
 async def courses_page_full_of_tiles(site, session):
     url = urllib.parse.urljoin(site.url, "/courses")
