@@ -91,7 +91,7 @@ class SmartSession:
             return str(resp.url)
 
 
-MAX_CLIENTS = 500
+MAX_CLIENTS = 100
 TIMEOUT = 20
 
 
@@ -175,6 +175,7 @@ def main(min, format, site_patterns):
         new += site.current_courses or site.latest_courses
 
     all_courses = collections.defaultdict(set)
+    all_orgs = collections.defaultdict(set)
     all_course_ids = set()
     for site in sites:
         for course_id, num in site.course_ids.items():
@@ -186,6 +187,7 @@ def main(min, format, site_patterns):
             else:
                 course = f"{key.org}+{key.course}"
             all_courses[course].add(site)
+            all_orgs[key.org].add(site)
 
     with open("course-ids.txt", "w") as f:
         f.write("".join(i + "\n" for i in sorted(all_course_ids)))
@@ -195,10 +197,10 @@ def main(min, format, site_patterns):
         reporter = text_report
     elif format == 'html':
         reporter = html_report
-    reporter(sites_descending, old, new, all_courses)
+    reporter(sites_descending, old, new, all_courses, all_orgs)
 
 
-def text_report(sites, old, new, all_courses):
+def text_report(sites, old, new, *_):
     print(f"Found courses went from {old} to {new}")
     for site in sites:
         print(f"{site.url}: {site.latest_courses} --> {site.current_courses}")
@@ -209,7 +211,7 @@ def text_report(sites, old, new, all_courses):
                 line = "Worked"
             print(f"    {strategy}: {line}")
 
-def html_report(sites, old, new, all_courses):
+def html_report(sites, old, new, all_courses, all_orgs):
     with open("sites.html", "w") as htmlout:
         CSS = """\
             html {
@@ -231,7 +233,11 @@ def html_report(sites, old, new, all_courses):
         writer = HtmlOutlineWriter(htmlout, css=CSS)
         writer.start_section(f"{len(sites)} sites: {old} &rarr; {new}")
         for site in sites:
-            writer.start_section(f"<a class='url' href='{site.url}'>{site.url}</a>: {site.latest_courses} &rarr; {site.current_courses} ({site.time:.1f}s)")
+            if site.time > 3:
+                time_note = f" ({site.time:.1f}s)"
+            else:
+                time_note = ""
+            writer.start_section(f"<a class='url' href='{site.url}'>{site.url}</a>: {site.latest_courses} &rarr; {site.current_courses}{time_note}")
             for strategy, tb in site.tried:
                 if tb is not None:
                     line = tb.splitlines()[-1][:100]
@@ -250,6 +256,15 @@ def html_report(sites, old, new, all_courses):
         all_courses_items = sorted(all_courses.items(), key=lambda item: len(item[1]), reverse=True)
         for course_id, sites in all_courses_items:
             writer.start_section(f"{course_id}: {len(sites)}")
+            for site in sites:
+                writer.write(f"<p><a class='url' href='{site.url}'>{site.url}</a></p>")
+            writer.end_section()
+        writer.end_section()
+
+        shared_orgs = [(org, sites) for org, sites in all_orgs.items() if len(sites) > 1]
+        writer.start_section(f"<p>Shared orgs: {len(shared_orgs)}</p>")
+        for org, sites in sorted(shared_orgs):
+            writer.start_section(f"{org}: {len(sites)}")
             for site in sites:
                 writer.write(f"<p><a class='url' href='{site.url}'>{site.url}</a></p>")
             writer.end_section()
