@@ -4,6 +4,7 @@ import asyncio
 import collections
 import csv
 import itertools
+import json
 import logging
 import os
 import pprint
@@ -154,9 +155,8 @@ def read_sites(csv_file, ignore=None):
 
 @click.command(help=__doc__)
 @click.option('--min', type=int, default=1)
-@click.option('--format', type=click.Choice(['text', 'html']), default='text')
 @click.argument('site_patterns', nargs=-1)
-def main(min, format, site_patterns):
+def main(min, site_patterns):
     # Make the list of sites we're going to scrape.
     sites = list(read_sites("sites.csv", ignore="ignore.csv"))
     sites = [s for s in sites if s.latest_courses >= min]
@@ -192,15 +192,12 @@ def main(min, format, site_patterns):
     with open("course-ids.txt", "w") as f:
         f.write("".join(i + "\n" for i in sorted(all_course_ids)))
 
-
-    if format == 'text':
-        reporter = text_report
-    elif format == 'html':
-        reporter = html_report
-    reporter(sites_descending, old, new, all_courses, all_orgs)
+    text_report(sites_descending, old, new)
+    html_report(sites_descending, old, new, all_courses, all_orgs)
+    json_update(sites_descending, all_courses, include_overcount=(not site_patterns))
 
 
-def text_report(sites, old, new, *_):
+def text_report(sites, old, new):
     print(f"Found courses went from {old} to {new}")
     for site in sites:
         print(f"{site.url}: {site.latest_courses} --> {site.current_courses}")
@@ -269,6 +266,23 @@ def html_report(sites, old, new, all_courses, all_orgs):
                 writer.write(f"<p><a class='url' href='{site.url}'>{site.url}</a></p>")
             writer.end_section()
         writer.end_section()
+
+def json_update(sites, all_courses, include_overcount=False):
+    data = {}
+
+    site_updates = {
+        s.url: [s.latest_courses, s.current_courses]
+        for s in sites
+            if s.current_courses and s.current_courses != s.latest_courses
+    }
+    data['sites'] = site_updates
+
+    if include_overcount:
+        data['overcount'] = sum(len(s) - 1 for s in all_courses.values())
+
+    with open("update.json", "w") as update_json:
+        json.dump(data, update_json, indent=4)
+
 
 if __name__ == '__main__':
     main()
