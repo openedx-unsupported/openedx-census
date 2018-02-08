@@ -43,7 +43,7 @@ async def openedu_ru_parser(site, session):
     url = "https://openedu.ru/course/"
     text = await session.text_from_url(url)
     count = elements_by_css(text, "span#courses-found")[0]
-    assert count.text.endswith(" курс")
+    assert count.text.endswith(" курса")
     return int(count.text.split()[0])
 
 @matches(r"gacco.org$")
