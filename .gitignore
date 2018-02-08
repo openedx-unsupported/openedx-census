@@ -5,3 +5,4 @@ ignore.csv
 save*.html
 course-ids.txt
 update.json
+keys.py
