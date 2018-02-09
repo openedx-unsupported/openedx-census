@@ -62,7 +62,7 @@ async def gacco_parser(site, session):
 @matches(r"doroob.sa$")
 async def doroob_parser(site, session):
     url = "https://www.doroob.sa/ar/individuals/elearning/"
-    text = await session.text_from_url(url, save=True)
+    text = await session.text_from_url(url)
     elts = elements_by_css(text, ".courses-listing-item")
     count = len(elts)
     return count
