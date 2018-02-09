@@ -1,5 +1,6 @@
 """Parsers for specific sites."""
 
+import datetime
 import json
 import urllib.parse
 
@@ -152,15 +153,29 @@ async def labster_com_parser(site, session):
 
 # Generic parsers
 
+def filter_by_date(elts, cutoff):
+    """Filter elements based on a <time> element."""
+    ok = []
+    for elt in elts:
+        time_spec = elt.xpath(".//time/@data-datetime")
+        if time_spec and time_spec[0] > cutoff:
+            continue
+        ok.append(elt)
+    return ok
+
 async def count_tiles(url, site, session):
     text = await session.text_from_url(url)
     elts = elements_by_css(text, ".courses ul.courses-listing > li")
     count = len(elts)
     if count == 0:
         elts = elements_by_css(text, ".courses-listing-item")
-        count = len(elts)
         if count == 0:
             raise Exception("got zero")
+
+    soon = datetime.datetime.now() + datetime.timedelta(days=365)
+    elts = filter_by_date(elts, soon.isoformat())
+    count = len(elts)
+
     # Try to get the course ids also!
     try:
         for elt in elts:
@@ -171,9 +186,11 @@ async def count_tiles(url, site, session):
     return count
 
 @matches(r".")
-async def course_discovery_post(site, session):
+async def edx_search_post(site, session):
     real_url = await session.real_url(site.url)
     url0 = urllib.parse.urljoin(real_url, '/courses')
+    # Note: the URL says course_discovery, but this is not the Course Discovery
+    # app, it routes through to edx-search.
     url = urllib.parse.urljoin(real_url, '/search/course_discovery/')
     text = await session.text_from_url(url, came_from=url0, method='post')
     try:
