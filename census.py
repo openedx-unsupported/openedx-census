@@ -67,7 +67,7 @@ class SmartSession:
     def __getattr__(self, name):
         return getattr(self.session, name)
 
-    async def text_from_url(self, url, came_from=None, method='get', save=False):
+    async def text_from_url(self, url, came_from=None, method='get', data=None, save=False):
         headers = {}
         if came_from:
             async with self.session.get(came_from, **GET_KWARGS) as resp:
@@ -79,7 +79,7 @@ class SmartSession:
 
             headers['Referer'] = real_url
 
-        async with getattr(self.session, method)(url, headers=headers, **GET_KWARGS) as response:
+        async with getattr(self.session, method)(url, headers=headers, data=data, **GET_KWARGS) as response:
             text = await response.read()
 
         if save or int(os.environ.get('SAVE', 0)):
