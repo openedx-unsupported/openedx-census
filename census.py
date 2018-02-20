@@ -1,4 +1,4 @@
-"""Visit Open edX sites and count their courses."""
+"""Automate the process of counting courses on Open edX sites."""
 
 import asyncio
 import collections
@@ -153,10 +153,15 @@ def read_sites(csv_file, ignore=None):
             if url not in ignored:
                 yield Site(url, courses)
 
-@click.command(help=__doc__)
+@click.group(help=__doc__)
+def cli():
+    pass
+
+@cli.command()
 @click.option('--min', type=int, default=1)
 @click.argument('site_patterns', nargs=-1)
-def main(min, site_patterns):
+def scrape(min, site_patterns):
+    """Visit sites and count their courses."""
     # Make the list of sites we're going to scrape.
     sites = list(read_sites("sites.csv", ignore="ignore.csv"))
     sites = [s for s in sites if s.latest_courses >= min]
@@ -285,4 +290,4 @@ def json_update(sites, all_courses, include_overcount=False):
 
 
 if __name__ == '__main__':
-    main()
+    cli()
