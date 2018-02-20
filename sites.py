@@ -150,6 +150,10 @@ async def labster_com_parser(site, session):
     count = len(elts)
     return count
 
+@matches(r"eso.org.br$")
+async def prefer_tiles(site, session):
+    return await courses_page_full_of_tiles(site, session)
+
 
 # Generic parsers
 
