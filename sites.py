@@ -2,6 +2,7 @@
 
 import datetime
 import json
+import re
 import urllib.parse
 
 from helpers import elements_by_css, elements_by_xpath
@@ -70,12 +71,16 @@ async def doroob_parser(site, session):
 
 @matches(r"millionlights.org$")
 async def millionlights_parser(site, session):
-    # There's a number on the front page, this number is different, but seems
-    # more accurate.
-    url = "https://www.millionlights.org/Course/GetCourses"
-    text = await session.text_from_url(url, method='post')
-    data = json.loads(text)
-    count = len(data)
+    url = "https://www.millionlights.org/Course/AllCourses"
+    text = await session.text_from_url(url)
+    # Find the language-faceted results, and add up their parenthesized
+    # numbers.
+    elts = elements_by_xpath(text, "//a[contains(text(), 'English (')]/ancestor::ul//a")
+    count = 0
+    for elt in elts:
+        m = re.search(r"\((\d+)\)", elt.text)
+        if m:
+            count += int(m.group(1))
     return count
 
 @matches(r"vlabs.ac.in$")
