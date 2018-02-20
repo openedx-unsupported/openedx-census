@@ -173,6 +173,7 @@ async def count_tiles(url, site, session):
     count = len(elts)
     if count == 0:
         elts = elements_by_css(text, ".courses-listing-item")
+        count = len(elts)
         if count == 0:
             raise Exception("got zero")
 
