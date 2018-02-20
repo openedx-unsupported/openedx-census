@@ -52,6 +52,12 @@ GET_KWARGS = dict(verify_ssl=False)
 
 USER_AGENT = "Open edX census-taker. Tell us about your site: oscm+census@edx.org"
 
+STATS_SITE = "http://openedxstats.herokuapp.com"
+UPDATE_JSON = "update.json"
+SITES_CSV = "sites.csv"
+IGNORE_CSV = "ignore.csv"
+
+
 class SmartSession:
     def __init__(self):
         headers = {
@@ -166,7 +172,7 @@ def cli():
 def scrape(min, site_patterns):
     """Visit sites and count their courses."""
     # Make the list of sites we're going to scrape.
-    sites = list(read_sites("sites.csv", ignore="ignore.csv"))
+    sites = list(read_sites(SITES_CSV, ignore=IGNORE_CSV))
     sites = [s for s in sites if s.latest_courses >= min]
     if site_patterns:
         sites = [s for s in sites if any(re.search(p, s.url) for p in site_patterns)]
@@ -288,11 +294,9 @@ def json_update(sites, all_courses, include_overcount=False):
     if include_overcount:
         data['overcount'] = sum(len(s) - 1 for s in all_courses.values())
 
-    with open("update.json", "w") as update_json:
+    with open(UPDATE_JSON, "w") as update_json:
         json.dump(data, update_json, indent=4)
 
-
-STATS_SITE = "http://openedxstats.herokuapp.com"
 
 def login(site, session):
     login_url = urllib.parse.urljoin(site, "/login/")
@@ -312,17 +316,17 @@ def getcsv(site):
         csv_url = urllib.parse.urljoin(site, "/sites/csv/")
         resp = s.get(csv_url)
         content = resp.content
-        with open("sites.csv", "wb") as csv_file:
+        with open(SITES_CSV, "wb") as csv_file:
             csv_file.write(content)
         lines = content.splitlines()
-        print(f"Wrote {len(lines)-1} sites to sites.csv")
+        print(f"Wrote {len(lines)-1} sites to {SITES_CSV}")
 
 
 @cli.command()
 @click.argument('site', default=STATS_SITE)
 def post(site):
     """Post updated numbers to the stats-collecting site."""
-    with open('update.json') as f:
+    with open(UPDATE_JSON) as f:
         data = f.read()
 
     with requests.Session() as s:
