@@ -292,21 +292,41 @@ def json_update(sites, all_courses, include_overcount=False):
         json.dump(data, update_json, indent=4)
 
 
+STATS_SITE = "http://openedxstats.herokuapp.com"
+
+def login(site, session):
+    login_url = urllib.parse.urljoin(site, "/login/")
+    resp = session.get(login_url)
+    m = re.search(r"name='csrfmiddlewaretoken' value='([^']+)'", resp.text)
+    if m:
+        csrftoken = m.group(1)
+    resp = session.post(login_url, data={'username': username, 'password': password, 'csrfmiddlewaretoken': csrftoken})
+    if resp.status_code not in [200, 404]:
+        resp.raise_for_status()
+
 @cli.command()
-@click.argument('site')
+@click.argument('site', default=STATS_SITE)
+def getcsv(site):
+    with requests.Session() as s:
+        login(site, s)
+        csv_url = urllib.parse.urljoin(site, "/sites/csv/")
+        resp = s.get(csv_url)
+        content = resp.content
+        with open("sites.csv", "wb") as csv_file:
+            csv_file.write(content)
+        lines = content.splitlines()
+        print(f"Wrote {len(lines)-1} sites to sites.csv")
+
+
+@cli.command()
+@click.argument('site', default=STATS_SITE)
 def post(site):
     """Post updated numbers to the stats-collecting site."""
     with open('update.json') as f:
         data = f.read()
 
     with requests.Session() as s:
-        login_url = urllib.parse.urljoin(site, "/login/")
-        resp = s.get(login_url)
-        m = re.search(r"name='csrfmiddlewaretoken' value='([^']+)'", resp.text)
-        if m:
-            csrftoken = m.group(1)
-        resp = s.post(login_url, data={'username': username, 'password': password, 'csrfmiddlewaretoken': csrftoken})
-
+        login(site, s)
         bulk_url = urllib.parse.urljoin(site, "/sites/bulk/")
         resp = s.post(bulk_url, data=data)
         print(resp.text)
