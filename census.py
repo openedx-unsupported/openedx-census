@@ -11,6 +11,7 @@ import pprint
 import re
 import time
 import traceback
+import urllib.parse
 from xml.sax.saxutils import escape
 
 import aiohttp
@@ -19,8 +20,10 @@ import attr
 import click
 import opaque_keys
 import opaque_keys.edx.keys
+import requests
 
 from html_writer import HtmlOutlineWriter
+from keys import username, password
 from site_patterns import find_site_functions
 
 # We don't use anything from this module, it just registers all the parsers.
@@ -287,6 +290,26 @@ def json_update(sites, all_courses, include_overcount=False):
 
     with open("update.json", "w") as update_json:
         json.dump(data, update_json, indent=4)
+
+
+@cli.command()
+@click.argument('site')
+def post(site):
+    """Post updated numbers to the stats-collecting site."""
+    with open('update.json') as f:
+        data = f.read()
+
+    with requests.Session() as s:
+        login_url = urllib.parse.urljoin(site, "/login/")
+        resp = s.get(login_url)
+        m = re.search(r"name='csrfmiddlewaretoken' value='([^']+)'", resp.text)
+        if m:
+            csrftoken = m.group(1)
+        resp = s.post(login_url, data={'username': username, 'password': password, 'csrfmiddlewaretoken': csrftoken})
+
+        bulk_url = urllib.parse.urljoin(site, "/sites/bulk/")
+        resp = s.post(bulk_url, data=data)
+        print(resp.text)
 
 
 if __name__ == '__main__':
