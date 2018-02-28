@@ -155,6 +155,17 @@ async def labster_com_parser(site, session):
     count = len(elts)
     return count
 
+@matches(r"\bedcast.org$")
+async def edcast_org_parser(site, session):
+    url = "https://www.edcast.org/search"
+    text = await session.text_from_url(url)
+    h4 = elements_by_css(text, ".search-navigation-row h4")[0].text
+    head, tail = "All Courses (", " matches)"
+    assert h4.startswith(head)
+    assert h4.endswith(tail)
+    count = int(h4[len(head):-len(tail)])
+    return count
+
 @matches(r"eso.org.br$")
 async def prefer_tiles(site, session):
     return await courses_page_full_of_tiles(site, session)
