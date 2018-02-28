@@ -34,9 +34,14 @@ log = logging.getLogger(__name__)
 
 @attr.s(cmp=False, frozen=False)
 class Site:
+    # Stuff from the csv:
     url = attr.ib()
     latest_courses = attr.ib()
+    is_gone = attr.ib()
+
+    # Stuff that we scrape:
     current_courses = attr.ib(default=None)
+    is_gone_now = attr.ib(default=False)
     course_ids = attr.ib(default=attr.Factory(collections.Counter))
     tried = attr.ib(default=attr.Factory(list))
     time = attr.ib(default=None)
@@ -46,6 +51,20 @@ class Site:
 
     def __hash__(self):
         return hash(self.url)
+
+    @classmethod
+    def from_csv_row(cls, url, course_count, is_gone, **ignored):
+        return cls(url, course_count, is_gone=='True')
+
+    def should_update(self):
+        """Should we update this site in the database?"""
+        if self.is_gone != self.is_gone_now:
+            return True
+        if not self.current_courses:
+            return False
+        if self.current_courses != self.latest_courses:
+            return True
+        return False
 
 
 GET_KWARGS = dict(verify_ssl=False)
@@ -104,6 +123,9 @@ class SmartSession:
 MAX_CLIENTS = 100
 TIMEOUT = 20
 
+GONE_MSGS = [
+    "Cannot connect to host",
+]
 
 async def parse_site(site, session, sem):
     async with sem:
@@ -114,12 +136,19 @@ async def parse_site(site, session, sem):
                     site.current_courses = await parser(site, session)
                 except Exception as exc:
                     site.tried.append((parser.__name__, traceback.format_exc()))
+                    if any(msg in str(exc) for msg in GONE_MSGS):
+                        site.is_gone_now = True
+                        site.current_courses = site.latest_courses
+                        char = 'X'
+                        break
                 else:
                     site.tried.append((parser.__name__, None))
-                    print(".", end='', flush=True)
+                    char = '.'
                     break
             else:
-                print("X", end='', flush=True)
+                char = 'E'
+
+            print(char, end='', flush=True)
         site.time = time.time() - start
 
 
@@ -143,24 +172,26 @@ def get_urls(sites):
     loop.run_until_complete(future)
 
 def read_sites_file(f):
-    next(f)
-    for row in csv.reader(f):
-        url = row[1].strip().strip("/")
-        courses = int(row[2] or 0)
+    for row in csv.DictReader(f):
+        url = row['url'].strip().strip("/")
         if not url.startswith("http"):
             url = "http://" + url
-        yield url, courses
+        row['url'] = url
+
+        row['course_count'] = int(row['course_count'] or 0)
+
+        yield row
 
 def read_sites(csv_file, ignore=None):
     ignored = set()
     if ignore:
         with open(ignore) as f:
-            for url, _ in read_sites_file(f):
-                ignored.add(url)
+            for site in read_sites_file(f):
+                ignored.add(site['url'])
     with open(csv_file) as f:
-        for url, courses in read_sites_file(f):
-            if url not in ignored:
-                yield Site(url, courses)
+        for site in read_sites_file(f):
+            if site['url'] not in ignored:
+                yield Site.from_csv_row(**site)
 
 @click.group(help=__doc__)
 def cli():
@@ -168,14 +199,17 @@ def cli():
 
 @cli.command()
 @click.option('--min', type=int, default=1)
+@click.option('--gone', is_flag=True)
 @click.argument('site_patterns', nargs=-1)
-def scrape(min, site_patterns):
+def scrape(min, gone, site_patterns):
     """Visit sites and count their courses."""
     # Make the list of sites we're going to scrape.
     sites = list(read_sites(SITES_CSV, ignore=IGNORE_CSV))
     sites = [s for s in sites if s.latest_courses >= min]
     if site_patterns:
         sites = [s for s in sites if any(re.search(p, s.url) for p in site_patterns)]
+    if not gone:
+        sites = [s for s in sites if not s.is_gone]
     print(f"{len(sites)} sites")
 
     # SCRAPE!
@@ -285,9 +319,11 @@ def json_update(sites, all_courses, include_overcount=False):
     data = {}
 
     site_updates = {
-        s.url: [s.latest_courses, s.current_courses]
-        for s in sites
-            if s.current_courses and s.current_courses != s.latest_courses
+        s.url: {
+            'course_count': s.current_courses,
+            'is_gone': s.is_gone_now,
+        }
+        for s in sites if s.should_update()
     }
     data['sites'] = site_updates
 
@@ -301,9 +337,12 @@ def json_update(sites, all_courses, include_overcount=False):
 def login(site, session):
     login_url = urllib.parse.urljoin(site, "/login/")
     resp = session.get(login_url)
+    resp.raise_for_status()
     m = re.search(r"name='csrfmiddlewaretoken' value='([^']+)'", resp.text)
     if m:
         csrftoken = m.group(1)
+    else:
+        raise Exception(f"No CSRF token found from {login_url}")
     resp = session.post(login_url, data={'username': username, 'password': password, 'csrfmiddlewaretoken': csrftoken})
     if resp.status_code not in [200, 404]:
         resp.raise_for_status()
@@ -313,7 +352,7 @@ def login(site, session):
 def getcsv(site):
     with requests.Session() as s:
         login(site, s)
-        csv_url = urllib.parse.urljoin(site, "/sites/csv/")
+        csv_url = urllib.parse.urljoin(site, "/sites/csv/?complete=1")
         resp = s.get(csv_url)
         content = resp.content
         with open(SITES_CSV, "wb") as csv_file:
