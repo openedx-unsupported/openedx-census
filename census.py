@@ -320,6 +320,7 @@ def json_update(sites, all_courses, include_overcount=False):
 
     site_updates = {
         s.url: {
+            'old_course_count': s.latest_courses,
             'course_count': s.current_courses,
             'is_gone': s.is_gone_now,
         }
