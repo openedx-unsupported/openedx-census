@@ -125,6 +125,7 @@ TIMEOUT = 20
 
 GONE_MSGS = [
     "Cannot connect to host",
+    "Bad Gateway",
 ]
 
 async def parse_site(site, session, sem):
