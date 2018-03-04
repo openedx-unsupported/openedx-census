@@ -2,6 +2,7 @@
 
 import lxml
 import lxml.html
+import parse
 
 
 def elements_by_xpath(html, xpath):
@@ -15,3 +16,15 @@ def elements_by_css(html, css):
     tree = lxml.etree.fromstring(html, parser)
     elts = tree.cssselect(css)
     return elts
+
+def parse_text(pattern, text):
+    """Parse a pattern from https://pypi.python.org/pypi/parse
+
+    Returns the parse.Result object.
+
+    Raises an exception if no match.
+    """
+    result = parse.parse(pattern, text.strip())
+    if not result:
+        raise ValueError(f"Couldn't apply pattern {pattern!r} to {text!r}")
+    return result

@@ -5,7 +5,7 @@ import json
 import re
 import urllib.parse
 
-from helpers import elements_by_css, elements_by_xpath
+from helpers import elements_by_css, elements_by_xpath, parse_text
 from site_patterns import matches, matches_any
 
 # XuetangX: add up courses by institution.
@@ -78,9 +78,8 @@ async def millionlights_parser(site, session):
     elts = elements_by_xpath(text, "//a[contains(text(), 'English (')]/ancestor::ul//a")
     count = 0
     for elt in elts:
-        m = re.search(r"\((\d+)\)", elt.text)
-        if m:
-            count += int(m.group(1))
+        result = parse_text("{} ({:d})", elt.text)
+        count += result[1]
     return count
 
 @matches("vlabs.ac.in")
@@ -88,20 +87,16 @@ async def vlabs_parser(site, session):
     url = "https://vlabs.ac.in/"
     text = await session.text_from_url(url)
     elt = elements_by_css(text, "div.features div:first-child div h3")[0]
-    words = elt.text.strip().split()
-    assert words[0] == "Labs"
-    count = int(words[1])
-    return count
+    result = parse_text("Labs {:d}", elt.text)
+    return result[0]
 
 @matches("enlightme.net")
 async def enlightme_parser(site, session):
     url = "https://www.enlightme.net/courses/"
     text = await session.text_from_url(url)
     elt = elements_by_css(text, ".course-index span")[0]
-    words = elt.text.strip().split()
-    assert words[:3] == ["Showing", "1-10", "of"]
-    count = int(words[3])
-    return count
+    result = parse_text("Showing 1-10 of {:d} results", elt.text)
+    return result[0]
 
 @matches("skills.med.hku.hk")
 async def hku_hk_parser(site, session):
@@ -159,12 +154,9 @@ async def labster_com_parser(site, session):
 async def edcast_org_parser(site, session):
     url = "https://www.edcast.org/search"
     text = await session.text_from_url(url)
-    h4 = elements_by_css(text, ".search-navigation-row h4")[0].text
-    head, tail = "All Courses (", " matches)"
-    assert h4.startswith(head)
-    assert h4.endswith(tail)
-    count = int(h4[len(head):-len(tail)])
-    return count
+    h4 = elements_by_css(text, ".search-navigation-row h4")[0]
+    result = parse_text("All Courses ({:d} matches)", h4.text)
+    return result[0]
 
 @matches("cognitiveclass.ai")
 @matches("bigdatauniversity.com.cn")
