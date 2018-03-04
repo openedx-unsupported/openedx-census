@@ -187,6 +187,21 @@ async def entuze_parser(site, session):
 async def prefer_tiles(site, session):
     return await courses_page_full_of_tiles(site, session)
 
+@matches("gotoclass.ir")
+async def gotoclass_parser(site, session):
+    url = urllib.parse.urljoin(site.url, "/courses/")
+    count = 0
+    while True:
+        text = await session.text_from_url(url)
+        elts = elements_by_css(text, "div.course-block")
+        count += len(elts)
+        next_a = elements_by_css(text, "a.next.page-numbers")
+        if not next_a:
+            break
+        assert len(next_a) == 1
+        url = urllib.parse.urljoin(url, next_a[0].get('href'))
+    return count
+
 
 # Generic parsers
 
