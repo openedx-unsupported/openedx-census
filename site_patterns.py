@@ -4,19 +4,19 @@ import re
 
 SITE_PATTERNS = []
 
-def matches(suffix):
+def matches(suffix, *args, **kwargs):
     """Decorator for a parser to apply to any url that ends with the suffix."""
     def _decorator(func):
-        SITE_PATTERNS.append((re.compile(r"\b" + re.escape(suffix) + r"$"), func))
+        SITE_PATTERNS.append((re.compile(r"\b" + re.escape(suffix) + r"$"), func, args, kwargs))
         return func
     return _decorator
 
 def matches_any(func):
     """Decorator for a parser that applies to any url at all."""
-    SITE_PATTERNS.append((re.compile(r"."), func))
+    SITE_PATTERNS.append((re.compile(r"."), func, (), {}))
     return func
 
 def find_site_functions(url):
-    for pattern, func in SITE_PATTERNS:
+    for pattern, func, args, kwargs in SITE_PATTERNS:
         if pattern.search(url):
-            yield func
+            yield func, args, kwargs

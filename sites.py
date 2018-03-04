@@ -61,11 +61,12 @@ async def gacco_parser(site, session):
     count += len(data["archived_courses"])
     return count
 
-@matches("doroob.sa")
-async def doroob_parser(site, session):
-    url = "https://www.doroob.sa/ar/individuals/elearning/"
+@matches("doroob.sa", "/ar/individuals/elearning/", ".courses-listing-item")
+@matches("labster.com", "/simulations/", ".md-simulation-card")
+async def count_elements_parser(site, session, relurl, css):
+    url = urllib.parse.urljoin(site.url, relurl)
     text = await session.text_from_url(url)
-    elts = elements_by_css(text, ".courses-listing-item")
+    elts = elements_by_css(text, css)
     count = len(elts)
     return count
 
@@ -140,14 +141,6 @@ async def edraak_org_parser(site, session):
     count = 0
     for elt in elts:
         count += int(elt.text.strip(" ()"))
-    return count
-
-@matches("labster.com")
-async def labster_com_parser(site, session):
-    url = "https://www.labster.com/simulations/"
-    text = await session.text_from_url(url)
-    elts = elements_by_css(text, ".md-simulation-card")
-    count = len(elts)
     return count
 
 @matches("edcast.org")

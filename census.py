@@ -132,9 +132,9 @@ async def parse_site(site, session, sem):
     async with sem:
         start = time.time()
         with async_timeout.timeout(TIMEOUT):
-            for parser in find_site_functions(site.url):
+            for parser, args, kwargs in find_site_functions(site.url):
                 try:
-                    site.current_courses = await parser(site, session)
+                    site.current_courses = await parser(site, session, *args, **kwargs)
                 except Exception as exc:
                     site.tried.append((parser.__name__, traceback.format_exc()))
                     if any(msg in str(exc) for msg in GONE_MSGS):
