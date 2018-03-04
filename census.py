@@ -120,7 +120,7 @@ class SmartSession:
             return str(resp.url)
 
 
-MAX_CLIENTS = 50
+MAX_CLIENTS = 30
 TIMEOUT = 20
 
 GONE_MSGS = [
