@@ -17,6 +17,14 @@ def elements_by_css(html, css):
     elts = tree.cssselect(css)
     return elts
 
+def element_by_css(html, css):
+    elts = elements_by_css(html, css)
+    if len(elts) > 1:
+        raise ValueError(f"Found {len(elts)} that matched {css!r}")
+    if len(elts) == 0:
+        raise ValueError(f"Found nothing that matched {css!r}")
+    return elts[0]
+
 def parse_text(pattern, text):
     """Parse a pattern from https://pypi.python.org/pypi/parse
 

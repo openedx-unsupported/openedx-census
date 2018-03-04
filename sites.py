@@ -5,7 +5,7 @@ import json
 import re
 import urllib.parse
 
-from helpers import elements_by_css, elements_by_xpath, parse_text
+from helpers import element_by_css, elements_by_css, elements_by_xpath, parse_text
 from site_patterns import matches, matches_any
 
 # XuetangX: add up courses by institution.
@@ -44,7 +44,7 @@ async def openedu_tw_parser(site, session):
 async def openedu_ru_parser(site, session):
     url = "https://openedu.ru/course/"
     text = await session.text_from_url(url)
-    count = elements_by_css(text, "span#courses-found")[0]
+    count = element_by_css(text, "span#courses-found")
     assert " кур" in count.text
     return int(count.text.split()[0])
 
@@ -86,7 +86,7 @@ async def millionlights_parser(site, session):
 async def vlabs_parser(site, session):
     url = "https://vlabs.ac.in/"
     text = await session.text_from_url(url)
-    elt = elements_by_css(text, "div.features div:first-child div h3")[0]
+    elt = element_by_css(text, "div.features div:first-child div h3")
     result = parse_text("Labs {:d}", elt.text)
     return result[0]
 
@@ -94,7 +94,7 @@ async def vlabs_parser(site, session):
 async def enlightme_parser(site, session):
     url = "https://www.enlightme.net/courses/"
     text = await session.text_from_url(url)
-    elt = elements_by_css(text, ".course-index span")[0]
+    elt = element_by_css(text, ".course-index span")
     result = parse_text("Showing 1-10 of {:d} results", elt.text)
     return result[0]
 
@@ -118,7 +118,7 @@ async def hku_nursing_parser(site, session):
 async def learning_hku_parser(site, session):
     url = "https://learning.hku.hk/catalog/all-courses/"
     text = await session.text_from_url(url)
-    elt = elements_by_css(text, "li#course-all span")[0]
+    elt = element_by_css(text, "li#course-all span")
     count = int(elt.text)
     return count
 
@@ -154,7 +154,7 @@ async def labster_com_parser(site, session):
 async def edcast_org_parser(site, session):
     url = "https://www.edcast.org/search"
     text = await session.text_from_url(url)
-    h4 = elements_by_css(text, ".search-navigation-row h4")[0]
+    h4 = element_by_css(text, ".search-navigation-row h4")
     result = parse_text("All Courses ({:d} matches)", h4.text)
     return result[0]
 
@@ -179,9 +179,8 @@ async def cognitiveclass_parser(site, session):
 async def entuze_parser(site, session):
     url = urllib.parse.urljoin(site.url, "/course_packages/")
     text = await session.text_from_url(url)
-    elt = elements_by_css(text, "div#discovery-message")
-    assert len(elt) == 1
-    result = parse_text("Viewing {:d} courses", elt[0].text)
+    elt = element_by_css(text, "div#discovery-message")
+    result = parse_text("Viewing {:d} courses", elt.text)
     return result[0]
 
 @matches("eso.org.br")
