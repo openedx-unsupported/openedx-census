@@ -175,6 +175,15 @@ async def cognitiveclass_parser(site, session):
         url = urllib.parse.urljoin(url, next_href[0])
     return count
 
+@matches("entuze.com")
+async def entuze_parser(site, session):
+    url = urllib.parse.urljoin(site.url, "/course_packages/")
+    text = await session.text_from_url(url)
+    elt = elements_by_css(text, "div#discovery-message")
+    assert len(elt) == 1
+    result = parse_text("Viewing {:d} courses", elt[0].text)
+    return result[0]
+
 @matches("eso.org.br")
 async def prefer_tiles(site, session):
     return await courses_page_full_of_tiles(site, session)
