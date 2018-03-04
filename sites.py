@@ -166,6 +166,23 @@ async def edcast_org_parser(site, session):
     count = int(h4[len(head):-len(tail)])
     return count
 
+@matches(r"cognitiveclass.ai$")
+@matches(r"bigdatauniversity.com.cn$")
+async def cognitiveclass_parser(site, session):
+    url = urllib.parse.urljoin(site.url, "/courses")
+    count = 0
+    while True:
+        text = await session.text_from_url(url)
+        elts = elements_by_css(text, "article.course.card")
+        count += len(elts)
+        # Find the a element with '>' as the text, get its href.
+        next_href = elements_by_xpath(text, "//a/span[text() = '>']/../@href")
+        if not next_href:
+            break
+        assert len(next_href) == 1
+        url = urllib.parse.urljoin(url, next_href[0])
+    return count
+
 @matches(r"eso.org.br$")
 async def prefer_tiles(site, session):
     return await courses_page_full_of_tiles(site, session)
