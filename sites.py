@@ -6,10 +6,10 @@ import re
 import urllib.parse
 
 from helpers import elements_by_css, elements_by_xpath
-from site_patterns import matches
+from site_patterns import matches, matches_any
 
 # XuetangX: add up courses by institution.
-@matches(r"www\.xuetangx\.com$")
+@matches("www.xuetangx.com")
 async def xuetang_parser(site, session):
     url = "http://www.xuetangx.com/partners"
     text = await session.text_from_url(url)
@@ -26,21 +26,21 @@ async def xuetang_parser(site, session):
     return courses
 
 # FUN has an api that returns a count.
-@matches(r"france-universite-numerique-mooc\.fr$")
+@matches("france-universite-numerique-mooc.fr")
 async def fun_parser(site, session):
     url = "https://www.fun-mooc.fr/fun/api/courses/?rpp=50&page=1"
     text = await session.text_from_url(url)
     data = json.loads(text)
     return data['count']
 
-@matches(r"courses.openedu.tw$")
+@matches("courses.openedu.tw")
 async def openedu_tw_parser(site, session):
     url = "https://www.openedu.tw/rest/courses/query"
     text = await session.text_from_url(url)
     data = json.loads(text)
     return len(data)
 
-@matches(r"openedu.ru$")
+@matches("openedu.ru")
 async def openedu_ru_parser(site, session):
     url = "https://openedu.ru/course/"
     text = await session.text_from_url(url)
@@ -48,7 +48,7 @@ async def openedu_ru_parser(site, session):
     assert " кур" in count.text
     return int(count.text.split()[0])
 
-@matches(r"gacco.org$")
+@matches("gacco.org")
 async def gacco_parser(site, session):
     url = "http://gacco.org/data/course/gacco_list.json"
     text = await session.text_from_url(url)
@@ -61,7 +61,7 @@ async def gacco_parser(site, session):
     count += len(data["archived_courses"])
     return count
 
-@matches(r"doroob.sa$")
+@matches("doroob.sa")
 async def doroob_parser(site, session):
     url = "https://www.doroob.sa/ar/individuals/elearning/"
     text = await session.text_from_url(url)
@@ -69,7 +69,7 @@ async def doroob_parser(site, session):
     count = len(elts)
     return count
 
-@matches(r"millionlights.org$")
+@matches("millionlights.org")
 async def millionlights_parser(site, session):
     url = "https://www.millionlights.org/Course/AllCourses"
     text = await session.text_from_url(url)
@@ -83,7 +83,7 @@ async def millionlights_parser(site, session):
             count += int(m.group(1))
     return count
 
-@matches(r"vlabs.ac.in$")
+@matches("vlabs.ac.in")
 async def vlabs_parser(site, session):
     url = "https://vlabs.ac.in/"
     text = await session.text_from_url(url)
@@ -93,7 +93,7 @@ async def vlabs_parser(site, session):
     count = int(words[1])
     return count
 
-@matches(r"enlightme.net$")
+@matches("enlightme.net")
 async def enlightme_parser(site, session):
     url = "https://www.enlightme.net/courses/"
     text = await session.text_from_url(url)
@@ -103,7 +103,7 @@ async def enlightme_parser(site, session):
     count = int(words[3])
     return count
 
-@matches(r"skills.med.hku.hk$")
+@matches("skills.med.hku.hk")
 async def hku_hk_parser(site, session):
     url = "https://skills.med.hku.hk/mbbs_admin/public/downloadMbbsJsonFile"
     text = await session.text_from_url(url)
@@ -111,7 +111,7 @@ async def hku_hk_parser(site, session):
     count = len(data)
     return count
 
-@matches(r"skillvideo.nursing.hku.hk$")
+@matches("skillvideo.nursing.hku.hk")
 async def hku_nursing_parser(site, session):
     url = "https://skillvideo.nursing.hku.hk/nurs_admin/public/downloadNursJsonFile"
     text = await session.text_from_url(url)
@@ -119,7 +119,7 @@ async def hku_nursing_parser(site, session):
     count = len(data)
     return count
 
-@matches(r"learning.hku.hk$")
+@matches("learning.hku.hk")
 async def learning_hku_parser(site, session):
     url = "https://learning.hku.hk/catalog/all-courses/"
     text = await session.text_from_url(url)
@@ -127,7 +127,7 @@ async def learning_hku_parser(site, session):
     count = int(elt.text)
     return count
 
-@matches(r"iitbombayx.in$")
+@matches("iitbombayx.in")
 async def iitbombayx_parser(site, session):
     url = "https://iitbombayx.in/courses"
     text = await session.text_from_url(url)
@@ -137,7 +137,7 @@ async def iitbombayx_parser(site, session):
         count += int(elt.text.strip("()"))
     return count
 
-@matches(r"edraak.org$")
+@matches("edraak.org")
 async def edraak_org_parser(site, session):
     url = "https://www.edraak.org/en/courses/"
     text = await session.text_from_url(url)
@@ -147,7 +147,7 @@ async def edraak_org_parser(site, session):
         count += int(elt.text.strip(" ()"))
     return count
 
-@matches(r"labster.com$")
+@matches("labster.com")
 async def labster_com_parser(site, session):
     url = "https://www.labster.com/simulations/"
     text = await session.text_from_url(url)
@@ -155,7 +155,7 @@ async def labster_com_parser(site, session):
     count = len(elts)
     return count
 
-@matches(r"\bedcast.org$")
+@matches("edcast.org")
 async def edcast_org_parser(site, session):
     url = "https://www.edcast.org/search"
     text = await session.text_from_url(url)
@@ -166,8 +166,8 @@ async def edcast_org_parser(site, session):
     count = int(h4[len(head):-len(tail)])
     return count
 
-@matches(r"cognitiveclass.ai$")
-@matches(r"bigdatauniversity.com.cn$")
+@matches("cognitiveclass.ai")
+@matches("bigdatauniversity.com.cn")
 async def cognitiveclass_parser(site, session):
     url = urllib.parse.urljoin(site.url, "/courses")
     count = 0
@@ -183,7 +183,7 @@ async def cognitiveclass_parser(site, session):
         url = urllib.parse.urljoin(url, next_href[0])
     return count
 
-@matches(r"eso.org.br$")
+@matches("eso.org.br")
 async def prefer_tiles(site, session):
     return await courses_page_full_of_tiles(site, session)
 
@@ -223,7 +223,7 @@ async def count_tiles(url, site, session):
         pass
     return count
 
-@matches(r".")
+@matches_any
 async def edx_search_post(site, session):
     real_url = await session.real_url(site.url)
     url0 = urllib.parse.urljoin(real_url, '/courses')
@@ -245,11 +245,11 @@ async def edx_search_post(site, session):
         pass
     return count
 
-@matches(r".")
+@matches_any
 async def courses_page_full_of_tiles(site, session):
     url = urllib.parse.urljoin(site.url, "/courses")
     return await count_tiles(url, site, session)
 
-@matches(r".")
+@matches_any
 async def home_page_full_of_tiles(site, session):
     return await count_tiles(site.url, site, session)

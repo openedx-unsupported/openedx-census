@@ -120,7 +120,7 @@ class SmartSession:
             return str(resp.url)
 
 
-MAX_CLIENTS = 100
+MAX_CLIENTS = 50
 TIMEOUT = 20
 
 GONE_MSGS = [
@@ -277,7 +277,10 @@ def html_report(sites, old, new, all_courses, all_orgs):
         """
 
         writer = HtmlOutlineWriter(htmlout, css=CSS)
-        writer.start_section(f"{len(sites)} sites: {old} &rarr; {new}")
+        header = f"{len(sites)} sites: {old}"
+        if new != old:
+            header += f" &rarr; {new}"
+        writer.start_section(header)
         for site in sites:
             if site.time > 3:
                 time_note = f" ({site.time:.1f}s)"
