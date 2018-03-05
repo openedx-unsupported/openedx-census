@@ -196,6 +196,13 @@ async def gotoclass_parser(site, session):
         url = urllib.parse.urljoin(url, next_a[0].get('href'))
     return count
 
+@matches("learn.in.th")
+async def learn_in_th_parser(site, session):
+    url = urllib.parse.urljoin(site.url, "/main/frontend/ListCourses/listSearch/1")
+    text = await session.text_from_url(url)
+    data = json.loads(text)
+    return data['all_row']
+
 
 # Generic parsers
 
