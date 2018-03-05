@@ -1,9 +1,16 @@
 """Helpers for picking apart web data."""
 
+import urllib.parse
+
 import lxml
 import lxml.html
 import parse
 
+
+def site_url(site, rel_url):
+    """Compose an absolute URL from a site and a relative url."""
+    url = urllib.parse.urljoin(site.url, rel_url)
+    return url
 
 def elements_by_xpath(html, xpath):
     parser = lxml.etree.HTMLParser()

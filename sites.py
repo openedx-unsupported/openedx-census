@@ -5,7 +5,11 @@ import json
 import re
 import urllib.parse
 
-from helpers import element_by_css, elements_by_css, elements_by_xpath, parse_text
+from helpers import (
+    site_url,
+    parse_text,
+    element_by_css, elements_by_css, elements_by_xpath,
+)
 from site_patterns import matches, matches_any
 
 # XuetangX: add up courses by institution.
@@ -64,8 +68,8 @@ async def gacco_parser(site, session):
 @matches("doroob.sa", "/ar/individuals/elearning/", ".courses-listing-item")
 @matches("labster.com", "/simulations/", ".md-simulation-card")
 @matches("wasserx.com", "/courses/", "li.course-item")
-async def count_elements_parser(site, session, relurl, css):
-    url = urllib.parse.urljoin(site.url, relurl)
+async def count_elements_parser(site, session, rel_url, css):
+    url = site_url(site, rel_url)
     text = await session.text_from_url(url)
     elts = elements_by_css(text, css)
     count = len(elts)
@@ -155,7 +159,7 @@ async def edcast_org_parser(site, session):
 @matches("cognitiveclass.ai")
 @matches("bigdatauniversity.com.cn")
 async def cognitiveclass_parser(site, session):
-    url = urllib.parse.urljoin(site.url, "/courses")
+    url = site_url(site, "/courses")
     count = 0
     while True:
         text = await session.text_from_url(url)
@@ -171,7 +175,7 @@ async def cognitiveclass_parser(site, session):
 
 @matches("entuze.com")
 async def entuze_parser(site, session):
-    url = urllib.parse.urljoin(site.url, "/course_packages/")
+    url = site_url(site, "/course_packages/")
     text = await session.text_from_url(url)
     elt = element_by_css(text, "div#discovery-message")
     result = parse_text("Viewing {:d} courses", elt.text)
@@ -183,7 +187,7 @@ async def prefer_tiles(site, session):
 
 @matches("gotoclass.ir")
 async def gotoclass_parser(site, session):
-    url = urllib.parse.urljoin(site.url, "/courses/")
+    url = site_url(site, "/courses/")
     count = 0
     while True:
         text = await session.text_from_url(url)
@@ -198,7 +202,7 @@ async def gotoclass_parser(site, session):
 
 @matches("learn.in.th")
 async def learn_in_th_parser(site, session):
-    url = urllib.parse.urljoin(site.url, "/main/frontend/ListCourses/listSearch/1")
+    url = site_url(site, "/main/frontend/ListCourses/listSearch/1")
     text = await session.text_from_url(url)
     data = json.loads(text)
     return data['all_row']
@@ -263,7 +267,7 @@ async def edx_search_post(site, session):
 
 @matches_any
 async def courses_page_full_of_tiles(site, session):
-    url = urllib.parse.urljoin(site.url, "/courses")
+    url = site_url(site, "/courses")
     return await count_tiles(url, site, session)
 
 @matches_any
