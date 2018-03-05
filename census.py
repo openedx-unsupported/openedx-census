@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 """Automate the process of counting courses on Open edX sites."""
 
 import asyncio
