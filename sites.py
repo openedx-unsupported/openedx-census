@@ -33,7 +33,7 @@ async def fun_parser(site, session):
     data = json.loads(text)
     return data['count']
 
-@matches("courses.openedu.tw")
+@matches("://openedu.tw")
 async def openedu_tw_parser(site, session):
     url = "https://www.openedu.tw/rest/courses/query"
     text = await session.text_from_url(url)
