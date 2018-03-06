@@ -1,7 +1,6 @@
 *.pyc
 sites.csv
 sites.html
-ignore.csv
 save*.out
 course-ids.txt
 update.json

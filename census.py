@@ -79,7 +79,6 @@ USER_AGENT = "Open edX census-taker. Tell us about your site: oscm+census@edx.or
 STATS_SITE = "http://openedxstats.herokuapp.com"
 UPDATE_JSON = "update.json"
 SITES_CSV = "sites.csv"
-IGNORE_CSV = "ignore.csv"
 
 
 class SmartSession:
@@ -194,16 +193,10 @@ def read_sites_file(f):
 
         yield row
 
-def read_sites(csv_file, ignore=None):
-    ignored = set()
-    if ignore:
-        with open(ignore) as f:
-            for site in read_sites_file(f):
-                ignored.add(site['url'])
+def read_sites(csv_file):
     with open(csv_file) as f:
         for site in read_sites_file(f):
-            if site['url'] not in ignored:
-                yield Site.from_csv_row(**site)
+            yield Site.from_csv_row(**site)
 
 @click.group(help=__doc__)
 def cli():
@@ -223,7 +216,7 @@ def scrape(log_level, min, gone, site, site_patterns):
         sites = [Site.from_url(u) for u in site_patterns]
     else:
         # Make the list of sites we're going to scrape.
-        sites = list(read_sites(SITES_CSV, ignore=IGNORE_CSV))
+        sites = list(read_sites(SITES_CSV))
         sites = [s for s in sites if s.latest_courses >= min]
         if site_patterns:
             sites = [s for s in sites if any(re.search(p, s.url) for p in site_patterns)]
