@@ -209,7 +209,7 @@ async def learn_in_th_parser(site, session):
 
 @matches("www.edx.org")
 async def edx_org_parser(site, session):
-    url = site_url(site, "/api/v1/catalog/search?page=1&page_size=179")
+    url = site_url(site, "/api/v1/catalog/search?page=1&page_size=200")
     count = 0
     while True:
         text = await session.text_from_url(url)
