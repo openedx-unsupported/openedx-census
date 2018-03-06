@@ -2,7 +2,7 @@
 sites.csv
 sites.html
 ignore.csv
-save*.html
+save*.out
 course-ids.txt
 update.json
 keys.py

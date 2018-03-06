@@ -121,7 +121,7 @@ class SmartSession:
                 text = await response.read()
 
         if save or self.save:
-            with open("save{}.html".format(next(self.save_numbers)), "wb") as f:
+            with open("save{:03d}.out".format(next(self.save_numbers)), "wb") as f:
                 f.write(text)
         return text
 
