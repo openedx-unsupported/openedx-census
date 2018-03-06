@@ -318,7 +318,8 @@ def html_report(sites, old, new, all_courses, all_orgs):
 
         total_course_ids = sum(len(sites) for sites in all_courses.values())
         writer.start_section(f"<p>Course IDs: {total_course_ids}</p>")
-        all_courses_items = sorted(all_courses.items(), key=lambda item: len(item[1]), reverse=True)
+        all_courses_items = sorted(all_courses.items())
+        all_courses_items = sorted(all_courses_items, key=lambda item: len(item[1]), reverse=True)
         for course_id, sites in all_courses_items:
             writer.start_section(f"{course_id}: {len(sites)}")
             for site in sites:
