@@ -134,13 +134,13 @@ async def parse_site(site, session, sem):
         start = time.time()
         with async_timeout.timeout(TIMEOUT):
             for parser, args, kwargs in find_site_functions(site.url):
+                site.current_courses = site.latest_courses
                 try:
                     site.current_courses = await parser(site, session, *args, **kwargs)
                 except Exception as exc:
                     site.tried.append((parser.__name__, traceback.format_exc()))
                     if any(msg in str(exc) for msg in GONE_MSGS):
                         site.is_gone_now = True
-                        site.current_courses = site.latest_courses
                         char = 'X'
                         break
                 else:
