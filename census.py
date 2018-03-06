@@ -105,9 +105,10 @@ class SmartSession:
         headers = {}
         if came_from:
             log.debug("GET %s", came_from)
-            async with self.session.get(came_from, **GET_KWARGS) as resp:
-                real_url = str(resp.url)
-                x = await resp.read()
+            with async_timeout.timeout(TIMEOUT):
+                async with self.session.get(came_from, **GET_KWARGS) as resp:
+                    real_url = str(resp.url)
+                    x = await resp.read()
             cookies = self.session.cookie_jar.filter_cookies(url)
             if 'csrftoken' in cookies:
                 headers['X-CSRFToken'] = cookies['csrftoken'].value
@@ -115,8 +116,9 @@ class SmartSession:
             headers['Referer'] = real_url
 
         log.debug("%s %s", method.upper(), url)
-        async with getattr(self.session, method)(url, headers=headers, data=data, **GET_KWARGS) as response:
-            text = await response.read()
+        with async_timeout.timeout(TIMEOUT):
+            async with getattr(self.session, method)(url, headers=headers, data=data, **GET_KWARGS) as response:
+                text = await response.read()
 
         if save or self.save:
             with open("save{}.html".format(next(self.save_numbers)), "wb") as f:
@@ -125,8 +127,9 @@ class SmartSession:
 
     async def real_url(self, url):
         log.debug("GET %s (real_url)", url)
-        async with self.session.get(url, **GET_KWARGS) as resp:
-            return str(resp.url)
+        with async_timeout.timeout(TIMEOUT):
+            async with self.session.get(url, **GET_KWARGS) as resp:
+                return str(resp.url)
 
 
 MAX_CLIENTS = 30
@@ -140,25 +143,24 @@ GONE_MSGS = [
 async def parse_site(site, session, sem):
     async with sem:
         start = time.time()
-        with async_timeout.timeout(TIMEOUT):
-            for parser, args, kwargs in find_site_functions(site.url):
-                site.current_courses = site.latest_courses
-                try:
-                    site.current_courses = await parser(site, session, *args, **kwargs)
-                except Exception as exc:
-                    site.tried.append((parser.__name__, traceback.format_exc()))
-                    if any(msg in str(exc) for msg in GONE_MSGS):
-                        site.is_gone_now = True
-                        char = 'X'
-                        break
-                else:
-                    site.tried.append((parser.__name__, None))
-                    char = '.'
+        for parser, args, kwargs in find_site_functions(site.url):
+            site.current_courses = site.latest_courses
+            try:
+                site.current_courses = await parser(site, session, *args, **kwargs)
+            except Exception as exc:
+                site.tried.append((parser.__name__, traceback.format_exc()))
+                if any(msg in str(exc) for msg in GONE_MSGS):
+                    site.is_gone_now = True
+                    char = 'X'
                     break
             else:
-                char = 'E'
+                site.tried.append((parser.__name__, None))
+                char = '.'
+                break
+        else:
+            char = 'E'
 
-            print(char, end='', flush=True)
+        print(char, end='', flush=True)
         site.time = time.time() - start
 
 
