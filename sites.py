@@ -207,6 +207,24 @@ async def learn_in_th_parser(site, session):
     data = json.loads(text)
     return data['all_row']
 
+@matches("www.edx.org")
+async def edx_org_parser(site, session):
+    url = site_url(site, "/api/v1/catalog/search?page=1&page_size=179")
+    count = 0
+    while True:
+        text = await session.text_from_url(url)
+        data = json.loads(text)
+        objs = data['objects']['results']
+        count += len(objs)
+        for obj in objs:
+            course_id = obj.get('key')
+            if course_id:
+                site.course_ids[course_id] += 1
+        url = data['objects'].get('next')
+        if not url:
+            break
+    return count
+
 
 # Generic parsers
 
