@@ -57,6 +57,10 @@ class Site:
     def from_csv_row(cls, url, course_count, is_gone, **ignored):
         return cls(url, course_count, is_gone=='True')
 
+    @classmethod
+    def from_url(cls, url):
+        return cls(url, latest_courses=0, is_gone=False)
+
     def should_update(self):
         """Should we update this site in the database?"""
         if self.is_gone != self.is_gone_now:
@@ -85,6 +89,7 @@ class SmartSession:
         }
         self.session = aiohttp.ClientSession(headers=headers, raise_for_status=True)
         self.save_numbers = itertools.count()
+        self.save = bool(int(os.environ.get('SAVE', 0)))
 
     async def __aenter__(self):
         await self.session.__aenter__()
@@ -99,6 +104,7 @@ class SmartSession:
     async def text_from_url(self, url, came_from=None, method='get', data=None, save=False):
         headers = {}
         if came_from:
+            log.debug("GET %s", came_from)
             async with self.session.get(came_from, **GET_KWARGS) as resp:
                 real_url = str(resp.url)
                 x = await resp.read()
@@ -108,15 +114,17 @@ class SmartSession:
 
             headers['Referer'] = real_url
 
+        log.debug("%s %s", method.upper(), url)
         async with getattr(self.session, method)(url, headers=headers, data=data, **GET_KWARGS) as response:
             text = await response.read()
 
-        if save or int(os.environ.get('SAVE', 0)):
+        if save or self.save:
             with open("save{}.html".format(next(self.save_numbers)), "wb") as f:
                 f.write(text)
         return text
 
     async def real_url(self, url):
+        log.debug("GET %s (real_url)", url)
         async with self.session.get(url, **GET_KWARGS) as resp:
             return str(resp.url)
 
@@ -200,18 +208,25 @@ def cli():
     pass
 
 @cli.command()
+@click.option('--log', 'log_level', type=str, default='info')
 @click.option('--min', type=int, default=1)
 @click.option('--gone', is_flag=True)
+@click.option('--site', is_flag=True)
 @click.argument('site_patterns', nargs=-1)
-def scrape(min, gone, site_patterns):
+def scrape(log_level, min, gone, site, site_patterns):
     """Visit sites and count their courses."""
-    # Make the list of sites we're going to scrape.
-    sites = list(read_sites(SITES_CSV, ignore=IGNORE_CSV))
-    sites = [s for s in sites if s.latest_courses >= min]
-    if site_patterns:
-        sites = [s for s in sites if any(re.search(p, s.url) for p in site_patterns)]
-    if not gone:
-        sites = [s for s in sites if not s.is_gone]
+    logging.basicConfig(level=log_level.upper())
+    if site:
+        # Exact sites provided on the command line
+        sites = [Site.from_url(u) for u in site_patterns]
+    else:
+        # Make the list of sites we're going to scrape.
+        sites = list(read_sites(SITES_CSV, ignore=IGNORE_CSV))
+        sites = [s for s in sites if s.latest_courses >= min]
+        if site_patterns:
+            sites = [s for s in sites if any(re.search(p, s.url) for p in site_patterns)]
+        if not gone:
+            sites = [s for s in sites if not s.is_gone]
     print(f"{len(sites)} sites")
 
     # SCRAPE!
