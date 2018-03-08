@@ -120,7 +120,11 @@ class SmartSession:
                 text = await response.read()
 
         if save or self.save:
-            with open("save{:03d}.out".format(next(self.save_numbers)), "wb") as f:
+            num = next(self.save_numbers)
+            save_name = f"save{num:03d}.out"
+            with open(f"save_index.out", "a") as idx:
+                print(f"{save_name}: {url} ({response.status})", file=idx)
+            with open(save_name, "wb") as f:
                 f.write(text)
         return text
 
