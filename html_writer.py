@@ -1,5 +1,6 @@
 import textwrap
 
+
 class HtmlOutlineWriter:
     """Write an HTML file with nested collapsable sections."""
 
@@ -7,6 +8,7 @@ class HtmlOutlineWriter:
         <!DOCTYPE html>
         <html>
         <head>
+        <title>[[TITLE]]</title>
         <meta charset="utf-8" />
         <style>
         .toggle-box {
@@ -62,10 +64,13 @@ class HtmlOutlineWriter:
 
     SECTION_END = "</div></div>"
 
-    def __init__(self, fout, css=""):
+    def __init__(self, fout, css="", title=""):
         self.fout = fout
         self.section_id = 0
-        self.fout.write(self.HEAD.replace("[[CSS]]", textwrap.dedent(css)))
+        head = self.HEAD
+        head = head.replace("[[CSS]]", textwrap.dedent(css))
+        head = head.replace("[[TITLE]]", title)
+        self.fout.write(head)
 
     def start_section(self, html, klass=None):
         self.fout.write(self.SECTION_START.format(

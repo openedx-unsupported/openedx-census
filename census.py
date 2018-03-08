@@ -300,19 +300,42 @@ def html_report(sites, old, new, all_courses, all_orgs):
             .strategy {
                 font-style: italic;
             }
+            .tag {
+                font-size: 75%;
+                margin: 0 .1em;
+                padding: .1em .3em;
+                border-radius: 3px;
+            }
+            .tag.slow {
+                background: #d5efa7;
+            }
+            .tag.none {
+                background: #a9a9f2;
+            }
+            .tag.drastic {
+                background: #f09393;
+            }
+
         """
 
-        writer = HtmlOutlineWriter(htmlout, css=CSS)
+        writer = HtmlOutlineWriter(htmlout, css=CSS, title=f"Census: {len(sites)} sites")
         header = f"{len(sites)} sites: {old}"
         if new != old:
             header += f" &rarr; {new}"
         writer.start_section(header)
         for site in sites:
-            if site.time > 3:
-                time_note = f" ({site.time:.1f}s)"
+            old, new = site.latest_courses, site.current_courses
+            tags = []
+            if site.time > 5:
+                tags.append(f"<span class='tag slow'>{site.time:.1f}s</span>")
+            if new is None:
+                tags.append(f"<span class='tag none'>None</span>")
+                new_text = ""
             else:
-                time_note = ""
-            writer.start_section(f"<a class='url' href='{site.url}'>{site.url}</a>: {site.latest_courses} &rarr; {site.current_courses}{time_note}")
+                new_text = f" &rarr; {new}"
+                if abs(new - old) > 10 and not (0.5 >= old/new >= 1.5):
+                    tags.append(f"<span class='tag drastic'>Drastic</span>")
+            writer.start_section(f"<a class='url' href='{site.url}'>{site.url}</a>: {old}{new_text} {''.join(tags)}")
             for strategy, tb in site.tried:
                 if tb is not None:
                     lines = tb.splitlines()
