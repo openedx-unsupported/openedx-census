@@ -109,7 +109,7 @@ class SmartSession:
                 async with getattr(self.session, method)(url, **kwargs, **GET_KWARGS) as response:
                     return response
             except aiohttp.ClientResponseError as exc:
-                raise HttpError(f"HTTP error {exc.code}: {url}")
+                raise HttpError(f"{exc.code} {exc.request_info.method} {exc.request_info.url}")
 
     async def text_from_url(self, url, came_from=None, method='get', data=None, save=False):
         headers = {}
