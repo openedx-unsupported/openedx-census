@@ -222,7 +222,11 @@ def scrape(log_level, min, gone, site, site_patterns):
             sites = [s for s in sites if any(re.search(p, s.url) for p in site_patterns)]
         if not gone:
             sites = [s for s in sites if not s.is_gone]
-    print(f"{len(sites)} sites")
+
+    if len(sites) == 1:
+        print("1 site")
+    else:
+        print(f"{len(sites)} sites")
 
     # SCRAPE!
     get_urls(sites)
