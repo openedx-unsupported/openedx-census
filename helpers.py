@@ -7,6 +7,15 @@ import lxml.html
 import parse
 
 
+class ScrapeFail(Exception):
+    """Any controlled failure of scraping."""
+    pass
+
+class GotZero(ScrapeFail):
+    """Raised when we couldn't find the info we want."""
+    pass
+
+
 def site_url(site, rel_url):
     """Compose an absolute URL from a site and a relative url."""
     url = urllib.parse.urljoin(site.url, rel_url)

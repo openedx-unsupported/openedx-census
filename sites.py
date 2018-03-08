@@ -9,6 +9,7 @@ from helpers import (
     site_url,
     parse_text,
     element_by_css, elements_by_css, elements_by_xpath,
+    GotZero,
 )
 from site_patterns import matches, matches_any
 
@@ -246,7 +247,7 @@ async def count_tiles(url, site, session):
         elts = elements_by_css(text, ".courses-listing-item")
         count = len(elts)
         if count == 0:
-            raise Exception("got zero")
+            raise GotZero("No .courses-listing-item's")
 
     soon = datetime.datetime.now() + datetime.timedelta(days=365)
     elts = filter_by_date(elts, soon.isoformat())
@@ -275,7 +276,7 @@ async def edx_search_post(site, session):
         raise Exception(f"Couldn't parse result from json: {text[:100]!r}")
     count = data["total"]
     if count == 0:
-        raise Exception("got zero")
+        raise GotZero("data[total] is zero")
     try:
         for course in data["results"]:
             site.course_ids[course["_id"]] += 1

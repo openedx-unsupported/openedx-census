@@ -23,6 +23,7 @@ import opaque_keys
 import opaque_keys.edx.keys
 import requests
 
+from helpers import ScrapeFail
 from html_writer import HtmlOutlineWriter
 from keys import username, password
 from site_patterns import find_site_functions
@@ -150,6 +151,8 @@ async def parse_site(site, session, sem):
         for parser, args, kwargs in find_site_functions(site.url):
             try:
                 site.current_courses = await parser(site, session, *args, **kwargs)
+            except ScrapeFail as err:
+                site.tried.append((parser.__name__, f"{err.__class__.__name__}: {err}"))
             except Exception as exc:
                 site.tried.append((parser.__name__, traceback.format_exc()))
                 if any(msg in str(exc) for msg in GONE_MSGS):
@@ -308,12 +311,16 @@ def html_report(sites, old, new, all_courses, all_orgs):
             writer.start_section(f"<a class='url' href='{site.url}'>{site.url}</a>: {site.latest_courses} &rarr; {site.current_courses}{time_note}")
             for strategy, tb in site.tried:
                 if tb is not None:
-                    line = tb.splitlines()[-1][:100]
-                    writer.start_section(f"<span class='strategy'>{strategy}:</span> {escape(line)}")
-                    writer.write("""<pre class="stdout">""")
-                    writer.write(escape(tb))
-                    writer.write("""</pre>""")
-                    writer.end_section()
+                    lines = tb.splitlines()
+                    if len(lines) > 1:
+                        line = tb.splitlines()[-1][:100]
+                        writer.start_section(f"<span class='strategy'>{strategy}:</span> {escape(line)}")
+                        writer.write("""<pre class="stdout">""")
+                        writer.write(escape(tb))
+                        writer.write("""</pre>""")
+                        writer.end_section()
+                    else:
+                        writer.write(f"<p>{strategy}: {lines[0]}")
                 else:
                     writer.write(f"<p>{strategy}: worked</p>")
             writer.end_section()
