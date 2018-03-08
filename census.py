@@ -23,7 +23,7 @@ import opaque_keys
 import opaque_keys.edx.keys
 import requests
 
-from helpers import ScrapeFail
+from helpers import HttpError, ScrapeFail
 from html_writer import HtmlOutlineWriter
 from keys import username, password
 from site_patterns import find_site_functions
@@ -101,24 +101,30 @@ class SmartSession:
     def __getattr__(self, name):
         return getattr(self.session, name)
 
+    async def request(self, url, method="get", **kwargs):
+        """How we like to make HTTP requests."""
+        log.debug("%s %s", method.upper(), url)
+        with async_timeout.timeout(TIMEOUT):
+            try:
+                async with getattr(self.session, method)(url, **kwargs, **GET_KWARGS) as response:
+                    return response
+            except aiohttp.ClientResponseError as exc:
+                raise HttpError(f"HTTP error {exc.code}: {url}")
+
     async def text_from_url(self, url, came_from=None, method='get', data=None, save=False):
         headers = {}
         if came_from:
-            log.debug("GET %s", came_from)
-            with async_timeout.timeout(TIMEOUT):
-                async with self.session.get(came_from, **GET_KWARGS) as resp:
-                    real_url = str(resp.url)
-                    x = await resp.read()
+            resp = await self.request(came_from)
+            real_url = str(resp.url)
+            x = await resp.read()
             cookies = self.session.cookie_jar.filter_cookies(url)
             if 'csrftoken' in cookies:
                 headers['X-CSRFToken'] = cookies['csrftoken'].value
 
             headers['Referer'] = real_url
 
-        log.debug("%s %s", method.upper(), url)
-        with async_timeout.timeout(TIMEOUT):
-            async with getattr(self.session, method)(url, headers=headers, data=data, **GET_KWARGS) as response:
-                text = await response.read()
+        response = await self.request(url, method, headers=headers, data=data)
+        text = await response.read()
 
         if save or self.save:
             num = next(self.save_numbers)
@@ -131,10 +137,8 @@ class SmartSession:
         return text
 
     async def real_url(self, url):
-        log.debug("GET %s (real_url)", url)
-        with async_timeout.timeout(TIMEOUT):
-            async with self.session.get(url, **GET_KWARGS) as resp:
-                return str(resp.url)
+        resp = await self.request(url)
+        return str(resp.url)
 
 
 MAX_CLIENTS = 30

@@ -15,6 +15,10 @@ class GotZero(ScrapeFail):
     """Raised when we couldn't find the info we want."""
     pass
 
+class HttpError(ScrapeFail):
+    """Raised to nicely handle HTTP errors."""
+    pass
+
 
 def site_url(site, rel_url):
     """Compose an absolute URL from a site and a relative url."""
