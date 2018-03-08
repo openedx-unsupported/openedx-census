@@ -147,7 +147,6 @@ async def parse_site(site, session, sem):
     async with sem:
         start = time.time()
         for parser, args, kwargs in find_site_functions(site.url):
-            site.current_courses = site.latest_courses
             try:
                 site.current_courses = await parser(site, session, *args, **kwargs)
             except Exception as exc:
@@ -345,7 +344,7 @@ def json_update(sites, all_courses, include_overcount=False):
     site_updates = {
         s.url: {
             'old_course_count': s.latest_courses,
-            'course_count': s.current_courses,
+            'course_count': s.current_courses if s.current_courses is not None else s.latest_courses,
             'is_gone': s.is_gone_now,
         }
         for s in sites if s.should_update()
