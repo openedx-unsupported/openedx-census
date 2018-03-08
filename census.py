@@ -121,8 +121,9 @@ class SmartSession:
 
         if save or self.save:
             num = next(self.save_numbers)
-            save_name = f"save{num:03d}.out"
-            with open(f"save_index.out", "a") as idx:
+            ext = re.split(r"[+/]", response.content_type)[-1]
+            save_name = f"save_{num:03d}.{ext}"
+            with open(f"save_index.txt", "a") as idx:
                 print(f"{save_name}: {url} ({response.status})", file=idx)
             with open(save_name, "wb") as f:
                 f.write(text)
