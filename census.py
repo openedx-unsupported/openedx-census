@@ -301,19 +301,20 @@ def html_report(sites, old, new, all_courses, all_orgs):
                 font-style: italic;
             }
             .tag {
+                display: inline-block;
                 font-size: 75%;
-                margin: 0 .1em;
-                padding: .1em .3em;
+                margin: 0 .1em .1em;
+                padding: 0 .3em;
                 border-radius: 3px;
             }
             .tag.slow {
                 background: #d5efa7;
             }
             .tag.none {
-                background: #a9a9f2;
+                background: #f09393;
             }
             .tag.drastic {
-                background: #f09393;
+                background: #ebe377;
             }
 
         """
@@ -326,8 +327,6 @@ def html_report(sites, old, new, all_courses, all_orgs):
         for site in sites:
             old, new = site.latest_courses, site.current_courses
             tags = []
-            if site.time > 5:
-                tags.append(f"<span class='tag slow'>{site.time:.1f}s</span>")
             if new is None:
                 tags.append(f"<span class='tag none'>None</span>")
                 new_text = ""
@@ -335,6 +334,8 @@ def html_report(sites, old, new, all_courses, all_orgs):
                 new_text = f" &rarr; {new}"
                 if abs(new - old) > 10 and not (0.5 >= old/new >= 1.5):
                     tags.append(f"<span class='tag drastic'>Drastic</span>")
+            if site.time > 5:
+                tags.append(f"<span class='tag slow'>{site.time:.1f}s</span>")
             writer.start_section(f"<a class='url' href='{site.url}'>{site.url}</a>: {old}{new_text} {''.join(tags)}")
             for strategy, tb in site.tried:
                 if tb is not None:
