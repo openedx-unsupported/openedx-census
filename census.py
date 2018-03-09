@@ -74,7 +74,7 @@ SITES_CSV = "sites.csv"
 
 
 MAX_REQUESTS = 30
-TIMEOUT = 20
+TIMEOUT = 30
 USER_AGENT = "Open edX census-taker. Tell us about your site: oscm+census@edx.org"
 
 GONE_MSGS = [
@@ -261,15 +261,17 @@ def html_report(sites, old, new, all_courses, all_orgs):
         for site in sites:
             old, new = site.latest_courses, site.current_courses
             tags = []
+            new_text = ""
             if new is None:
                 tags.append(f"<span class='tag none'>None</span>")
-                new_text = ""
             else:
-                new_text = f" &rarr; {new}"
+                if new != old:
+                    new_text = f"<b> &rarr; {new}</b>"
                 if abs(new - old) > 10 and not (0.5 >= old/new >= 1.5):
                     tags.append(f"<span class='tag drastic'>Drastic</span>")
-            if site.time > 5:
-                tags.append(f"<span class='tag slow'>{site.time:.1f}s</span>")
+            # Times are not right now that we limit requests, not sites.
+            #if site.time > 5:
+            #    tags.append(f"<span class='tag slow'>{site.time:.1f}s</span>")
             writer.start_section(f"<a class='url' href='{site.url}'>{site.url}</a>: {old}{new_text} {''.join(tags)}")
             for strategy, tb in site.tried:
                 if tb is not None:
