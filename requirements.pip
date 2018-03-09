@@ -7,3 +7,4 @@ cssselect
 click
 edx-opaque-keys
 parse
+asyncio_extras

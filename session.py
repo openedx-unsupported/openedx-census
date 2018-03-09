@@ -5,6 +5,7 @@ import os
 
 import aiohttp
 import async_timeout
+from asyncio_extras.contextmanager import async_contextmanager
 
 from helpers import HttpError
 
@@ -31,6 +32,7 @@ class SmartSession:
     def __getattr__(self, name):
         return getattr(self.session, name)
 
+    @async_contextmanager
     async def request(self, url, method="get", **kwargs):
         """How we like to make HTTP requests."""
         async with self.sem:
@@ -38,27 +40,27 @@ class SmartSession:
             with async_timeout.timeout(self.timeout):
                 try:
                     async with getattr(self.session, method)(url, **kwargs, **REQUEST_KWARGS) as response:
-                        return response
+                        yield response
                 except aiohttp.ClientError as exc:
                     raise HttpError(f"{exc.code} {exc.request_info.method} {exc.request_info.url}")
 
     async def text_from_url(self, url, came_from=None, method='get', data=None, save=False):
         headers = {}
         if came_from:
-            resp = await self.request(came_from)
-            real_url = str(resp.url)
-            x = await resp.read()
+            async with self.request(came_from) as resp:
+                real_url = str(resp.url)
+                x = await resp.read()
             cookies = self.session.cookie_jar.filter_cookies(url)
             if 'csrftoken' in cookies:
                 headers['X-CSRFToken'] = cookies['csrftoken'].value
 
             headers['Referer'] = real_url
 
-        response = await self.request(url, method, headers=headers, data=data)
-        try:
-            text = await response.read()
-        except aiohttp.ClientError as exc:
-            raise HttpError(f"{getattr(exc, 'code', str(exc))} {method} {url}")
+        async with self.request(url, method, headers=headers, data=data) as response:
+            try:
+                text = await response.read()
+            except aiohttp.ClientError as exc:
+                raise HttpError(f"{getattr(exc, 'code', str(exc))} {method} {url}")
 
         if save or self.save:
             num = next(self.save_numbers)
@@ -71,5 +73,5 @@ class SmartSession:
         return text
 
     async def real_url(self, url):
-        resp = await self.request(url)
-        return str(resp.url)
+        async with self.request(url) as resp:
+            return str(resp.url)
