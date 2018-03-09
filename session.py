@@ -73,6 +73,3 @@ class SmartSession:
     async def real_url(self, url):
         resp = await self.request(url)
         return str(resp.url)
-
-
-
