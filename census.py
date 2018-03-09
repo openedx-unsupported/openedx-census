@@ -4,10 +4,8 @@
 import asyncio
 import collections
 import csv
-import itertools
 import json
 import logging
-import os
 import pprint
 import re
 import time
@@ -15,24 +13,21 @@ import traceback
 import urllib.parse
 from xml.sax.saxutils import escape
 
-import aiohttp
-import async_timeout
 import attr
 import click
 import opaque_keys
 import opaque_keys.edx.keys
 import requests
 
-from helpers import HttpError, ScrapeFail
+from helpers import ScrapeFail
 from html_writer import HtmlOutlineWriter
 from keys import username, password
+from session import SmartSession
 from site_patterns import find_site_functions
 
 # We don't use anything from this module, it just registers all the parsers.
 import sites
 
-
-log = logging.getLogger(__name__)
 
 @attr.s(cmp=False, frozen=False)
 class Site:
@@ -73,120 +68,59 @@ class Site:
         return False
 
 
-GET_KWARGS = dict(verify_ssl=False)
-
-USER_AGENT = "Open edX census-taker. Tell us about your site: oscm+census@edx.org"
-
 STATS_SITE = "http://openedxstats.herokuapp.com"
 UPDATE_JSON = "update.json"
 SITES_CSV = "sites.csv"
 
 
-class SmartSession:
-    def __init__(self):
-        headers = {
-            'User-Agent': USER_AGENT,
-        }
-        self.session = aiohttp.ClientSession(headers=headers, raise_for_status=True)
-        self.save_numbers = itertools.count()
-        self.save = bool(int(os.environ.get('SAVE', 0)))
-
-    async def __aenter__(self):
-        await self.session.__aenter__()
-        return self
-
-    async def __aexit__(self, exc_type, exc_val, exc_tb):
-        await self.session.__aexit__(exc_type, exc_val, exc_tb)
-
-    def __getattr__(self, name):
-        return getattr(self.session, name)
-
-    async def request(self, url, method="get", **kwargs):
-        """How we like to make HTTP requests."""
-        log.debug("%s %s", method.upper(), url)
-        with async_timeout.timeout(TIMEOUT):
-            try:
-                async with getattr(self.session, method)(url, **kwargs, **GET_KWARGS) as response:
-                    return response
-            except aiohttp.ClientResponseError as exc:
-                raise HttpError(f"{exc.code} {exc.request_info.method} {exc.request_info.url}")
-
-    async def text_from_url(self, url, came_from=None, method='get', data=None, save=False):
-        headers = {}
-        if came_from:
-            resp = await self.request(came_from)
-            real_url = str(resp.url)
-            x = await resp.read()
-            cookies = self.session.cookie_jar.filter_cookies(url)
-            if 'csrftoken' in cookies:
-                headers['X-CSRFToken'] = cookies['csrftoken'].value
-
-            headers['Referer'] = real_url
-
-        response = await self.request(url, method, headers=headers, data=data)
-        text = await response.read()
-
-        if save or self.save:
-            num = next(self.save_numbers)
-            ext = re.split(r"[+/]", response.content_type)[-1]
-            save_name = f"save_{num:03d}.{ext}"
-            with open(f"save_index.txt", "a") as idx:
-                print(f"{save_name}: {url} ({response.status})", file=idx)
-            with open(save_name, "wb") as f:
-                f.write(text)
-        return text
-
-    async def real_url(self, url):
-        resp = await self.request(url)
-        return str(resp.url)
-
-
-MAX_CLIENTS = 30
+MAX_REQUESTS = 30
 TIMEOUT = 20
+USER_AGENT = "Open edX census-taker. Tell us about your site: oscm+census@edx.org"
 
 GONE_MSGS = [
     "Cannot connect to host",
     "Bad Gateway",
 ]
 
-async def parse_site(site, session, sem):
-    async with sem:
-        start = time.time()
-        for parser, args, kwargs in find_site_functions(site.url):
-            try:
-                site.current_courses = await parser(site, session, *args, **kwargs)
-            except ScrapeFail as err:
-                site.tried.append((parser.__name__, f"{err.__class__.__name__}: {err}"))
-            except Exception as exc:
-                site.tried.append((parser.__name__, traceback.format_exc()))
-                if any(msg in str(exc) for msg in GONE_MSGS):
-                    site.is_gone_now = True
-                    char = 'X'
-                    break
-            else:
-                site.tried.append((parser.__name__, None))
-                char = '.'
+async def parse_site(site, session):
+    start = time.time()
+    for parser, args, kwargs in find_site_functions(site.url):
+        try:
+            site.current_courses = await parser(site, session, *args, **kwargs)
+        except ScrapeFail as err:
+            site.tried.append((parser.__name__, f"{err.__class__.__name__}: {err}"))
+        except Exception as exc:
+            site.tried.append((parser.__name__, traceback.format_exc()))
+            if any(msg in str(exc) for msg in GONE_MSGS):
+                site.is_gone_now = True
+                char = 'X'
                 break
         else:
-            char = 'E'
+            site.tried.append((parser.__name__, None))
+            char = '.'
+            break
+    else:
+        char = 'E'
 
-        print(char, end='', flush=True)
-        site.time = time.time() - start
+    print(char, end='', flush=True)
+    site.time = time.time() - start
 
 
 async def run(sites):
     tasks = []
-    sem = asyncio.Semaphore(MAX_CLIENTS)
 
-    async with SmartSession() as session:
+    headers = {
+        'User-Agent': USER_AGENT,
+    }
+    async with SmartSession(max_requests=MAX_REQUESTS, timeout=TIMEOUT, headers=headers) as session:
         for site in sites:
-            task = asyncio.ensure_future(parse_site(site, session, sem))
+            task = asyncio.ensure_future(parse_site(site, session))
             tasks.append(task)
 
         responses = await asyncio.gather(*tasks)
         print()
 
-def get_urls(sites):
+def scrape_sites(sites):
     loop = asyncio.get_event_loop()
     future = asyncio.ensure_future(run(sites))
     # Some exceptions go to stderr and then to my except clause? Shut up.
@@ -240,7 +174,7 @@ def scrape(log_level, min, gone, site, site_patterns):
         print(f"{len(sites)} sites")
 
     # SCRAPE!
-    get_urls(sites)
+    scrape_sites(sites)
 
     # Prep data for reporting.
     sites_descending = sorted(sites, key=lambda s: s.latest_courses, reverse=True)
