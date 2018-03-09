@@ -39,7 +39,7 @@ class SmartSession:
                 try:
                     async with getattr(self.session, method)(url, **kwargs, **REQUEST_KWARGS) as response:
                         return response
-                except aiohttp.ClientResponseError as exc:
+                except aiohttp.ClientError as exc:
                     raise HttpError(f"{exc.code} {exc.request_info.method} {exc.request_info.url}")
 
     async def text_from_url(self, url, came_from=None, method='get', data=None, save=False):
@@ -55,7 +55,10 @@ class SmartSession:
             headers['Referer'] = real_url
 
         response = await self.request(url, method, headers=headers, data=data)
-        text = await response.read()
+        try:
+            text = await response.read()
+        except aiohttp.ClientError as exc:
+            raise HttpError(f"{getattr(exc, 'code', str(exc))} {method} {url}")
 
         if save or self.save:
             num = next(self.save_numbers)
