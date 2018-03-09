@@ -40,7 +40,8 @@ def elements_by_css(html, css):
 def element_by_css(html, css):
     elts = elements_by_css(html, css)
     if len(elts) > 1:
-        raise ValueError(f"Found {len(elts)} that matched {css!r}")
+        elt_text = "; ".join(lxml.etree.tostring(elt, encoding='unicode').strip() for elt in elts)
+        raise ValueError(f"Found {len(elts)} that matched {css!r}: {elt_text}")
     if len(elts) == 0:
         raise ValueError(f"Found nothing that matched {css!r}")
     return elts[0]
