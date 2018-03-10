@@ -138,8 +138,7 @@ def scrape(log_level, min, gone, site, out_file, site_patterns):
 @cli.command()
 @click.option('--in', 'in_file', type=click.File('rb'), default='sites.pickle')
 @click.option('--skip-none', is_flag=True)
-@click.option('--sort', 'sort_kind', type=click.Choice(['size', 'domain']), default='size')
-def html(in_file, skip_none, sort_kind):
+def html(in_file, skip_none):
     """Write an HTML report."""
     with in_file:
         sites = pickle.load(in_file)
@@ -154,10 +153,8 @@ def html(in_file, skip_none, sort_kind):
     with open("course-ids.txt", "w") as f:
         f.write("".join(i + "\n" for i in sorted(all_course_ids)))
 
-    if sort_kind == 'size':
-        sites = sorted(sites, key=lambda s: s.latest_courses, reverse=True)
-    elif sort_kind == 'domain':
-        sites = sorted(sites, key=lambda s: s.url[::-1])
+    sites = sorted(sites, key=lambda s: s.url.split(".")[::-1])
+    sites = sorted(sites, key=lambda s: s.current_courses, reverse=True)
     html_report("sites.html", sites, old, new, all_courses, all_orgs)
 
 
