@@ -8,3 +8,4 @@ click
 edx-opaque-keys
 parse
 asyncio_extras
+tqdm

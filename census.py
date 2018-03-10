@@ -2,6 +2,7 @@
 """Automate the process of counting courses on Open edX sites."""
 
 import asyncio
+import collections
 import json
 import logging
 import pickle
@@ -15,6 +16,7 @@ from xml.sax.saxutils import escape
 import attr
 import click
 import requests
+import tqdm
 
 from helpers import ScrapeFail
 from html_writer import HtmlOutlineWriter
@@ -61,9 +63,9 @@ async def parse_site(site, session):
     else:
         char = 'E'
 
-    print(char, end='', flush=True)
+    #print(char, end='', flush=True)
     site.time = time.time() - start
-
+    return char
 
 async def run(sites):
     tasks = []
@@ -76,7 +78,13 @@ async def run(sites):
             task = asyncio.ensure_future(parse_site(site, session))
             tasks.append(task)
 
-        responses = await asyncio.gather(*tasks)
+        chars = collections.Counter()
+        progress = tqdm.tqdm(asyncio.as_completed(tasks), total=len(tasks))
+        for completed in progress:
+            char = await completed
+            chars[char] += 1
+            desc = " ".join(f"{c}{v}" for c, v in sorted(chars.items()))
+            progress.set_description(desc)
         print()
 
 def scrape_sites(sites):
