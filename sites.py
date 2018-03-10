@@ -32,7 +32,7 @@ class Site:
 
     @classmethod
     def from_url(cls, url):
-        return cls(url, latest_courses=0, is_gone=False)
+        return cls(clean_url(url), latest_courses=0, is_gone=False)
 
     def should_update(self):
         """Should we update this site in the database?"""
@@ -58,6 +58,10 @@ def read_sites_csv(csv_file):
             row['course_count'] = int(row['course_count'] or 0)
             yield Site.from_csv_row(**row)
 
+def read_sites_flat(flat_file):
+    with open(flat_file) as f:
+        sites = [Site.from_url(url) for url in f]
+    return sites
 
 def totals(sites):
     old = new = 0

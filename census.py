@@ -20,7 +20,7 @@ from helpers import ScrapeFail
 from html_writer import HtmlOutlineWriter
 from keys import username, password
 from session import SmartSession
-from sites import Site, read_sites_csv, courses_and_orgs, totals
+from sites import Site, read_sites_csv, courses_and_orgs, totals, read_sites_flat
 from site_patterns import find_site_functions
 
 # We don't use anything from this module, it just registers all the parsers.
@@ -129,11 +129,15 @@ def scrape(log_level, min, gone, site, out_file, site_patterns):
 
 @cli.command()
 @click.option('--in', 'in_file', type=click.File('rb'), default='sites.pickle')
+@click.option('--skip-none', is_flag=True)
 @click.option('--sort', 'sort_kind', type=click.Choice(['size', 'domain']), default='size')
-def html(in_file, sort_kind):
+def html(in_file, skip_none, sort_kind):
     """Write an HTML report."""
     with in_file:
         sites = pickle.load(in_file)
+
+    if skip_none:
+        sites = [site for site in sites if site.current_courses is not None]
 
     # Prep data for reporting.
     old, new = totals(sites)
@@ -163,27 +167,21 @@ def json(in_file):
 
 @cli.command()
 @click.option('--log', 'log_level', type=str, default='info')
+@click.option('--out', 'out_file', type=click.File('wb'), default='refsites.pickle')
 @click.argument('referrer_sites', nargs=1)
-def refscrape(log_level, referrer_sites):
+def refscrape(log_level, out_file, referrer_sites):
     """Visit sites and count their courses."""
     logging.basicConfig(level=log_level.upper())
     known_sites = list(read_sites_csv(SITES_CSV))
 
-    with open(referrer_sites) as ref:
-        sites = [Site.from_url(u.strip()) for u in ref]
-
+    sites = read_sites_flat(referrer_sites)
     print(f"{len(sites)} sites")
 
     # SCRAPE!
     scrape_sites(sites)
 
-    # Prep data for reporting.
-    sites = [site for site in sites if site.current_courses is not None]
-    sites = sorted(sites, key=lambda s: s.url)
-
-    all_courses, all_orgs, all_course_ids = courses_and_orgs(sites)
-
-    html_report("refsites.html", sites, 0, 0, all_courses, all_orgs)
+    with out_file:
+        pickle.dump(sites, out_file)
 
 
 def text_report(sites, old, new):
