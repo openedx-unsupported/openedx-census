@@ -4,6 +4,7 @@
 import asyncio
 import json
 import logging
+import pickle
 import pprint
 import re
 import time
@@ -19,7 +20,7 @@ from helpers import ScrapeFail
 from html_writer import HtmlOutlineWriter
 from keys import username, password
 from session import SmartSession
-from sites import Site, read_sites_csv, courses_and_orgs
+from sites import Site, read_sites_csv, courses_and_orgs, totals
 from site_patterns import find_site_functions
 
 # We don't use anything from this module, it just registers all the parsers.
@@ -94,8 +95,9 @@ def cli():
 @click.option('--min', type=int, default=1)
 @click.option('--gone', is_flag=True)
 @click.option('--site', is_flag=True)
+@click.option('--out', 'out_file', type=click.File('wb'), default='sites.pickle')
 @click.argument('site_patterns', nargs=-1)
-def scrape(log_level, min, gone, site, site_patterns):
+def scrape(log_level, min, gone, site, out_file, site_patterns):
     """Visit sites and count their courses."""
     logging.basicConfig(level=log_level.upper())
     if site:
@@ -118,20 +120,44 @@ def scrape(log_level, min, gone, site, site_patterns):
     # SCRAPE!
     scrape_sites(sites)
 
-    # Prep data for reporting.
-    old = new = 0
-    for site in sites:
-        old += site.latest_courses
-        new += site.current_courses or site.latest_courses
+    with out_file:
+        pickle.dump(sites, out_file)
 
+    old, new = totals(sites)
+    sites_descending = sorted(sites, key=lambda s: s.latest_courses, reverse=True)
+    text_report(sites_descending, old, new)
+
+@cli.command()
+@click.option('--in', 'in_file', type=click.File('rb'), default='sites.pickle')
+@click.option('--sort', 'sort_kind', type=click.Choice(['size', 'domain']), default='size')
+def html(in_file, sort_kind):
+    """Write an HTML report."""
+    with in_file:
+        sites = pickle.load(in_file)
+
+    # Prep data for reporting.
+    old, new = totals(sites)
     all_courses, all_orgs, all_course_ids = courses_and_orgs(sites)
 
     with open("course-ids.txt", "w") as f:
         f.write("".join(i + "\n" for i in sorted(all_course_ids)))
 
+    if sort_kind == 'size':
+        sites = sorted(sites, key=lambda s: s.latest_courses, reverse=True)
+    elif sort_kind == 'domain':
+        sites = sorted(sites, key=lambda s: s.url[::-1])
+    html_report("sites.html", sites, old, new, all_courses, all_orgs)
+
+
+@cli.command()
+@click.option('--in', 'in_file', type=click.File('rb'), default='sites.pickle')
+def json(in_file):
+    """Write the update.json file."""
+    with in_file:
+        sites = pickle.load(in_file)
+
+    # Prep data for reporting.
     sites_descending = sorted(sites, key=lambda s: s.latest_courses, reverse=True)
-    text_report(sites_descending, old, new)
-    html_report("sites.html", sites_descending, old, new, all_courses, all_orgs)
     json_update(sites_descending, all_courses, include_overcount=(not site_patterns))
 
 

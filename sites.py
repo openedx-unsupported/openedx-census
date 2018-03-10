@@ -59,6 +59,13 @@ def read_sites_csv(csv_file):
             yield Site.from_csv_row(**row)
 
 
+def totals(sites):
+    old = new = 0
+    for site in sites:
+        old += site.latest_courses
+        new += site.current_courses or site.latest_courses
+    return old, new
+
 def courses_and_orgs(sites):
     all_courses = collections.defaultdict(set)
     all_orgs = collections.defaultdict(set)
