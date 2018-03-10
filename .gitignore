@@ -3,6 +3,7 @@ sites.csv
 sites.html
 refsites.html
 save_*.*
+*.pickle
 course-ids.txt
 update.json
 keys.py
