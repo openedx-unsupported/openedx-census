@@ -2,8 +2,6 @@
 """Automate the process of counting courses on Open edX sites."""
 
 import asyncio
-import collections
-import csv
 import json
 import logging
 import pprint
@@ -15,57 +13,17 @@ from xml.sax.saxutils import escape
 
 import attr
 import click
-import opaque_keys
-import opaque_keys.edx.keys
 import requests
 
 from helpers import ScrapeFail
 from html_writer import HtmlOutlineWriter
 from keys import username, password
 from session import SmartSession
+from sites import Site, read_sites_csv, courses_and_orgs
 from site_patterns import find_site_functions
 
 # We don't use anything from this module, it just registers all the parsers.
 import parsers
-
-
-@attr.s(cmp=False, frozen=False)
-class Site:
-    # Stuff from the csv:
-    url = attr.ib()
-    latest_courses = attr.ib()
-    is_gone = attr.ib()
-
-    # Stuff that we scrape:
-    current_courses = attr.ib(default=None)
-    is_gone_now = attr.ib(default=False)
-    course_ids = attr.ib(default=attr.Factory(collections.Counter))
-    tried = attr.ib(default=attr.Factory(list))
-    time = attr.ib(default=None)
-
-    def __eq__(self, other):
-        return self.url == other.url
-
-    def __hash__(self):
-        return hash(self.url)
-
-    @classmethod
-    def from_csv_row(cls, url, course_count, is_gone, **ignored):
-        return cls(url, course_count, is_gone=='True')
-
-    @classmethod
-    def from_url(cls, url):
-        return cls(url, latest_courses=0, is_gone=False)
-
-    def should_update(self):
-        """Should we update this site in the database?"""
-        if self.is_gone != self.is_gone_now:
-            return True
-        if not self.current_courses:
-            return False
-        if self.current_courses != self.latest_courses:
-            return True
-        return False
 
 
 STATS_SITE = "http://openedxstats.herokuapp.com"
@@ -127,22 +85,6 @@ def scrape_sites(sites):
     loop.set_exception_handler(lambda loop, context: None)
     loop.run_until_complete(future)
 
-def read_sites_file(f):
-    for row in csv.DictReader(f):
-        url = row['url'].strip().strip("/")
-        if not url.startswith("http"):
-            url = "http://" + url
-        row['url'] = url
-
-        row['course_count'] = int(row['course_count'] or 0)
-
-        yield row
-
-def read_sites(csv_file):
-    with open(csv_file) as f:
-        for site in read_sites_file(f):
-            yield Site.from_csv_row(**site)
-
 @click.group(help=__doc__)
 def cli():
     pass
@@ -161,7 +103,7 @@ def scrape(log_level, min, gone, site, site_patterns):
         sites = [Site.from_url(u) for u in site_patterns]
     else:
         # Make the list of sites we're going to scrape.
-        sites = list(read_sites(SITES_CSV))
+        sites = list(read_sites_csv(SITES_CSV))
         sites = [s for s in sites if s.latest_courses >= min]
         if site_patterns:
             sites = [s for s in sites if any(re.search(p, s.url) for p in site_patterns)]
@@ -199,7 +141,7 @@ def scrape(log_level, min, gone, site, site_patterns):
 def refscrape(log_level, referrer_sites):
     """Visit sites and count their courses."""
     logging.basicConfig(level=log_level.upper())
-    known_sites = list(read_sites(SITES_CSV))
+    known_sites = list(read_sites_csv(SITES_CSV))
 
     with open(referrer_sites) as ref:
         sites = [Site.from_url(u.strip()) for u in ref]
@@ -216,24 +158,6 @@ def refscrape(log_level, referrer_sites):
     all_courses, all_orgs, all_course_ids = courses_and_orgs(sites)
 
     html_report("refsites.html", sites, 0, 0, all_courses, all_orgs)
-
-
-def courses_and_orgs(sites):
-    all_courses = collections.defaultdict(set)
-    all_orgs = collections.defaultdict(set)
-    all_course_ids = set()
-    for site in sites:
-        for course_id, num in site.course_ids.items():
-            all_course_ids.add(course_id)
-            try:
-                key = opaque_keys.edx.keys.CourseKey.from_string(course_id)
-            except opaque_keys.InvalidKeyError:
-                course = course_id
-            else:
-                course = f"{key.org}+{key.course}"
-            all_courses[course].add(site)
-            all_orgs[key.org].add(site)
-    return all_courses, all_orgs, all_course_ids
 
 
 def text_report(sites, old, new):
