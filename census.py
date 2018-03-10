@@ -26,7 +26,7 @@ from session import SmartSession
 from site_patterns import find_site_functions
 
 # We don't use anything from this module, it just registers all the parsers.
-import sites
+import parsers
 
 
 @attr.s(cmp=False, frozen=False)
@@ -247,7 +247,7 @@ def text_report(sites, old, new):
                 line = "Worked"
             print(f"    {strategy}: {line}")
 
-def html_report(sites, outname, old, new, all_courses=None, all_orgs=None):
+def html_report(outname, sites, old, new, all_courses=None, all_orgs=None):
     with open(outname, "w") as htmlout:
         CSS = """\
             html {
