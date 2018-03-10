@@ -1,6 +1,7 @@
 *.pyc
 sites.csv
 sites.html
+refsites.html
 save_*.*
 course-ids.txt
 update.json

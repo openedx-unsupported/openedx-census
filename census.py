@@ -177,12 +177,48 @@ def scrape(log_level, min, gone, site, site_patterns):
     scrape_sites(sites)
 
     # Prep data for reporting.
-    sites_descending = sorted(sites, key=lambda s: s.latest_courses, reverse=True)
     old = new = 0
     for site in sites:
         old += site.latest_courses
         new += site.current_courses or site.latest_courses
 
+    all_courses, all_orgs, all_course_ids = courses_and_orgs(sites)
+
+    with open("course-ids.txt", "w") as f:
+        f.write("".join(i + "\n" for i in sorted(all_course_ids)))
+
+    sites_descending = sorted(sites, key=lambda s: s.latest_courses, reverse=True)
+    text_report(sites_descending, old, new)
+    html_report("sites.html", sites_descending, old, new, all_courses, all_orgs)
+    json_update(sites_descending, all_courses, include_overcount=(not site_patterns))
+
+
+@cli.command()
+@click.option('--log', 'log_level', type=str, default='info')
+@click.argument('referrer_sites', nargs=1)
+def refscrape(log_level, referrer_sites):
+    """Visit sites and count their courses."""
+    logging.basicConfig(level=log_level.upper())
+    known_sites = list(read_sites(SITES_CSV))
+
+    with open(referrer_sites) as ref:
+        sites = [Site.from_url(u.strip()) for u in ref]
+
+    print(f"{len(sites)} sites")
+
+    # SCRAPE!
+    scrape_sites(sites)
+
+    # Prep data for reporting.
+    sites = [site for site in sites if site.current_courses is not None]
+    sites = sorted(sites, key=lambda s: s.url)
+
+    all_courses, all_orgs, all_course_ids = courses_and_orgs(sites)
+
+    html_report("refsites.html", sites, 0, 0, all_courses, all_orgs)
+
+
+def courses_and_orgs(sites):
     all_courses = collections.defaultdict(set)
     all_orgs = collections.defaultdict(set)
     all_course_ids = set()
@@ -197,13 +233,7 @@ def scrape(log_level, min, gone, site, site_patterns):
                 course = f"{key.org}+{key.course}"
             all_courses[course].add(site)
             all_orgs[key.org].add(site)
-
-    with open("course-ids.txt", "w") as f:
-        f.write("".join(i + "\n" for i in sorted(all_course_ids)))
-
-    text_report(sites_descending, old, new)
-    html_report(sites_descending, old, new, all_courses, all_orgs)
-    json_update(sites_descending, all_courses, include_overcount=(not site_patterns))
+    return all_courses, all_orgs, all_course_ids
 
 
 def text_report(sites, old, new):
@@ -217,8 +247,8 @@ def text_report(sites, old, new):
                 line = "Worked"
             print(f"    {strategy}: {line}")
 
-def html_report(sites, old, new, all_courses, all_orgs):
-    with open("sites.html", "w") as htmlout:
+def html_report(sites, outname, old, new, all_courses=None, all_orgs=None):
+    with open(outname, "w") as htmlout:
         CSS = """\
             html {
                 font-family: sans-serif;
@@ -290,25 +320,27 @@ def html_report(sites, old, new, all_courses, all_orgs):
             writer.end_section()
         writer.end_section()
 
-        total_course_ids = sum(len(sites) for sites in all_courses.values())
-        writer.start_section(f"<p>Course IDs: {total_course_ids}</p>")
-        all_courses_items = sorted(all_courses.items())
-        all_courses_items = sorted(all_courses_items, key=lambda item: len(item[1]), reverse=True)
-        for course_id, sites in all_courses_items:
-            writer.start_section(f"{course_id}: {len(sites)}")
-            for site in sites:
-                writer.write(f"<p><a class='url' href='{site.url}'>{site.url}</a></p>")
+        if all_courses:
+            total_course_ids = sum(len(sites) for sites in all_courses.values())
+            writer.start_section(f"<p>Course IDs: {total_course_ids}</p>")
+            all_courses_items = sorted(all_courses.items())
+            all_courses_items = sorted(all_courses_items, key=lambda item: len(item[1]), reverse=True)
+            for course_id, sites in all_courses_items:
+                writer.start_section(f"{course_id}: {len(sites)}")
+                for site in sites:
+                    writer.write(f"<p><a class='url' href='{site.url}'>{site.url}</a></p>")
+                writer.end_section()
             writer.end_section()
-        writer.end_section()
 
-        shared_orgs = [(org, sites) for org, sites in all_orgs.items() if len(sites) > 1]
-        writer.start_section(f"<p>Shared orgs: {len(shared_orgs)}</p>")
-        for org, sites in sorted(shared_orgs):
-            writer.start_section(f"{org}: {len(sites)}")
-            for site in sites:
-                writer.write(f"<p><a class='url' href='{site.url}'>{site.url}</a></p>")
+        if all_orgs:
+            shared_orgs = [(org, sites) for org, sites in all_orgs.items() if len(sites) > 1]
+            writer.start_section(f"<p>Shared orgs: {len(shared_orgs)}</p>")
+            for org, sites in sorted(shared_orgs):
+                writer.start_section(f"{org}: {len(sites)}")
+                for site in sites:
+                    writer.write(f"<p><a class='url' href='{site.url}'>{site.url}</a></p>")
+                writer.end_section()
             writer.end_section()
-        writer.end_section()
 
 def json_update(sites, all_courses, include_overcount=False):
     data = {}
