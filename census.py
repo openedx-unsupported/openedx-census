@@ -73,7 +73,7 @@ UPDATE_JSON = "update.json"
 SITES_CSV = "sites.csv"
 
 
-MAX_REQUESTS = 30
+MAX_REQUESTS = 100
 TIMEOUT = 30
 USER_AGENT = "Open edX census-taker. Tell us about your site: oscm+census@edx.org"
 
