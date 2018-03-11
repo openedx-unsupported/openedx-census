@@ -154,7 +154,7 @@ def html(in_file, skip_none):
         f.write("".join(i + "\n" for i in sorted(all_course_ids)))
 
     sites = sorted(sites, key=lambda s: s.url.split(".")[::-1])
-    sites = sorted(sites, key=lambda s: s.current_courses, reverse=True)
+    sites = sorted(sites, key=lambda s: s.current_courses or s.latest_courses, reverse=True)
     html_report("sites.html", sites, old, new, all_courses, all_orgs)
 
 
