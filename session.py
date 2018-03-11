@@ -39,10 +39,11 @@ class SmartSession:
             log.debug("%s %s", method.upper(), url)
             with async_timeout.timeout(self.timeout):
                 try:
-                    async with getattr(self.session, method)(url, **kwargs, **REQUEST_KWARGS) as response:
+                    async with self.session.request(method, url, **kwargs, **REQUEST_KWARGS) as response:
                         yield response
                 except aiohttp.ClientError as exc:
-                    raise HttpError(f"{exc.code} {exc.request_info.method} {exc.request_info.url}")
+                    code = getattr(exc, 'code', str(exc))
+                    raise HttpError(f"{code} {method} {url}")
 
     async def text_from_url(self, url, came_from=None, method='get', data=None, save=False):
         headers = {}
@@ -60,7 +61,8 @@ class SmartSession:
             try:
                 text = await response.read()
             except aiohttp.ClientError as exc:
-                raise HttpError(f"{getattr(exc, 'code', str(exc))} {method} {url}")
+                code = getattr(exc, 'code', str(exc))
+                raise HttpError(f"{code} {method} {url}")
 
         if save or self.save:
             num = next(self.save_numbers)

@@ -46,20 +46,24 @@ GONE_MSGS = [
 async def parse_site(site, session):
     start = time.time()
     for parser, args, kwargs in find_site_functions(site.url):
+        err = None
         try:
             site.current_courses = await parser(site, session, *args, **kwargs)
-        except ScrapeFail as err:
-            site.tried.append((parser.__name__, f"{err.__class__.__name__}: {err}"))
+        except ScrapeFail as exc:
+            site.tried.append((parser.__name__, f"{exc.__class__.__name__}: {exc}"))
+            err = exc
         except Exception as exc:
             site.tried.append((parser.__name__, traceback.format_exc()))
-            if any(msg in str(exc) for msg in GONE_MSGS):
-                site.is_gone_now = True
-                char = 'X'
-                break
+            err = exc
         else:
             site.tried.append((parser.__name__, None))
             char = '.'
             break
+        if err:
+            if any(msg in str(err) for msg in GONE_MSGS):
+                site.is_gone_now = True
+                char = 'X'
+                break
     else:
         char = 'E'
 
