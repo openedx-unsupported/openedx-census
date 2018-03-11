@@ -160,14 +160,15 @@ def html(in_file, skip_none):
 
 @cli.command()
 @click.option('--in', 'in_file', type=click.File('rb'), default='sites.pickle')
-def json(in_file):
+def update_json(in_file):
     """Write the update.json file."""
     with in_file:
         sites = pickle.load(in_file)
 
     # Prep data for reporting.
     sites_descending = sorted(sites, key=lambda s: s.latest_courses, reverse=True)
-    json_update(sites_descending, all_courses, include_overcount=(not site_patterns))
+    all_courses, all_orgs, all_course_ids = courses_and_orgs(sites)
+    json_update(sites_descending, all_courses, include_overcount=True)
 
 
 @cli.command()
