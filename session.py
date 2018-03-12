@@ -2,6 +2,7 @@ import asyncio
 import itertools
 import logging
 import os
+import re
 
 import aiohttp
 import async_timeout
