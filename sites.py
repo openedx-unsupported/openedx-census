@@ -36,8 +36,14 @@ class Site:
 
     def should_update(self):
         """Should we update this site in the database?"""
-        if self.is_gone != self.is_gone_now:
-            return True
+        if self.is_gone:
+            if not self.is_gone_now and self.current_courses:
+                # Was gone, now not.
+                return True
+        else:
+            if self.is_gone_now:
+                # Used to be here, but now not.
+                return True
         if not self.current_courses:
             return False
         if self.current_courses != self.latest_courses:

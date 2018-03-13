@@ -139,6 +139,22 @@ def scrape(log_level, min, gone, site, out_file, site_patterns):
 @cli.command()
 @click.option('--in', 'in_file', type=click.File('rb'), default=SITES_PICKLE,
               help='The sites.pickle file to read')
+def summary(in_file):
+    with in_file:
+        sites = pickle.load(in_file)
+    summarize(sites)
+
+def summarize(sites):
+    old, new = totals(sites)
+
+    changed = sum(1 for s in sites if s.should_update())
+    gone = sum(1 for s in sites if s.is_gone_now and not s.is_gone)
+    back = sum(1 for s in sites if not s.is_gone_now and s.is_gone and s.current_courses)
+    print(f"Courses: {old} --> {new} ({new-old:+d});   Sites: {changed} changed, {gone} gone, {back} back")
+
+@cli.command()
+@click.option('--in', 'in_file', type=click.File('rb'), default=SITES_PICKLE,
+              help='The sites.pickle file to read')
 @click.option('--skip-none', is_flag=True, help="Don't include sites with no count")
 def html(in_file, skip_none):
     """Write an HTML report."""
