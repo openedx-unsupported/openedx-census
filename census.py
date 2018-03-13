@@ -136,10 +136,6 @@ def scrape(log_level, min, gone, site, out_file, site_patterns):
     with out_file:
         pickle.dump(sites, out_file)
 
-    old, new = totals(sites)
-    sites_descending = sorted(sites, key=lambda s: s.latest_courses, reverse=True)
-    text_report(sites_descending, old, new)
-
 @cli.command()
 @click.option('--in', 'in_file', type=click.File('rb'), default=SITES_PICKLE,
               help='The sites.pickle file to read')
@@ -196,7 +192,16 @@ def refscrape(log_level, out_file, referrer_sites):
         pickle.dump(sites, out_file)
 
 
-def text_report(sites, old, new):
+@cli.command('text')
+@click.option('--in', 'in_file', type=click.File('rb'), default=SITES_PICKLE,
+              help='The sites.pickle file to read')
+def text_report(in_file):
+    """Write a text report about site scraping."""
+    with in_file:
+        sites = pickle.load(in_file)
+
+    old, new = totals(sites)
+    sites = sorted(sites, key=lambda s: s.latest_courses, reverse=True)
     print(f"Found courses went from {old} to {new}")
     for site in sites:
         print(f"{site.url}: {site.latest_courses} --> {site.current_courses}")
