@@ -42,33 +42,34 @@ USER_AGENT = "Open edX census-taker. Tell us about your site: oscm+census@edx.or
 GONE_MSGS = [
     "Cannot connect to host",
     "Bad Gateway",
+    "TimeoutError",
+    "503",
 ]
 
 async def parse_site(site, session):
     start = time.time()
+    errs = []
     for parser, args, kwargs in find_site_functions(site.url):
-        err = None
         try:
             site.current_courses = await parser(site, session, *args, **kwargs)
         except ScrapeFail as exc:
             site.tried.append((parser.__name__, f"{exc.__class__.__name__}: {exc}"))
-            err = exc
+            err = str(exc) or exc.__class__.__name__
         except Exception as exc:
             site.tried.append((parser.__name__, traceback.format_exc()))
-            err = exc
+            err = str(exc) or exc.__class__.__name__
         else:
             site.tried.append((parser.__name__, None))
             char = '.'
             break
-        if err:
-            if any(msg in str(err) for msg in GONE_MSGS):
-                site.is_gone_now = True
-                char = 'X'
-                break
+        errs.append(err)
     else:
-        char = 'E'
+        if all(any(msg in err for msg in GONE_MSGS) for err in errs):
+            site.is_gone_now = True
+            char = 'X'
+        else:
+            char = 'E'
 
-    #print(char, end='', flush=True)
     site.time = time.time() - start
     return char
 
@@ -247,6 +248,7 @@ def html_report(outname, sites, old, new, all_courses=None, all_orgs=None):
             }
             .tag {
                 display: inline-block;
+                background: #cccccc;
                 font-size: 75%;
                 margin: 0 .1em .1em;
                 padding: 0 .3em;
@@ -272,17 +274,24 @@ def html_report(outname, sites, old, new, all_courses=None, all_orgs=None):
         for site in sites:
             old, new = site.latest_courses, site.current_courses
             tags = []
+
+            def tag_it(text, tag_name=None):
+                tags.append(f"<span class='tag {tag_name or text.lower()}'>{text}</span>")
             new_text = ""
             if new is None:
-                tags.append(f"<span class='tag none'>None</span>")
+                tag_it("None")
             else:
                 if new != old:
                     new_text = f"<b> &rarr; {new}</b>"
                 if abs(new - old) > 10 and not (0.5 >= old/new >= 1.5):
-                    tags.append(f"<span class='tag drastic'>Drastic</span>")
+                    tag_it("Drastic")
+            if site.is_gone_now:
+                tag_it("Gone")
+            elif site.is_gone:
+                tag_it("Back")
             # Times are not right now that we limit requests, not sites.
             #if site.time > 5:
-            #    tags.append(f"<span class='tag slow'>{site.time:.1f}s</span>")
+            #    tag_it(f"{site.time:.1f}s", "slow")
             writer.start_section(f"<a class='url' href='{site.url}'>{site.url}</a>: {old}{new_text} {''.join(tags)}")
             for strategy, tb in site.tried:
                 if tb is not None:
