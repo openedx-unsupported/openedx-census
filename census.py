@@ -60,13 +60,24 @@ async def parse_site(site, session):
             err = str(exc) or exc.__class__.__name__
         else:
             site.tried.append((parser.__name__, None))
-            char = '.'
+            if site.is_gone:
+                char = 'B'
+            else:
+                if site.current_courses == site.latest_courses:
+                    char = '='
+                elif site.current_courses < site.latest_courses:
+                    char = '-'
+                else:
+                    char = '+'
             break
         errs.append(err)
     else:
         if all(any(msg in err for msg in GONE_MSGS) for err in errs):
             site.is_gone_now = True
-            char = 'X'
+            if site.is_gone:
+                char = 'X'
+            else:
+                char = 'G'
         else:
             char = 'E'
 
