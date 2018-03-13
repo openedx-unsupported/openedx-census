@@ -32,6 +32,7 @@ import parsers
 STATS_SITE = "http://openedxstats.herokuapp.com"
 UPDATE_JSON = "update.json"
 SITES_CSV = "sites.csv"
+SITES_PICKLE = "sites.pickle"
 
 
 MAX_REQUESTS = 100
@@ -107,7 +108,7 @@ def cli():
 @click.option('--min', type=int, default=1)
 @click.option('--gone', is_flag=True)
 @click.option('--site', is_flag=True)
-@click.option('--out', 'out_file', type=click.File('wb'), default='sites.pickle')
+@click.option('--out', 'out_file', type=click.File('wb'), default=SITES_PICKLE)
 @click.argument('site_patterns', nargs=-1)
 def scrape(log_level, min, gone, site, out_file, site_patterns):
     """Visit sites and count their courses."""
@@ -140,8 +141,9 @@ def scrape(log_level, min, gone, site, out_file, site_patterns):
     text_report(sites_descending, old, new)
 
 @cli.command()
-@click.option('--in', 'in_file', type=click.File('rb'), default='sites.pickle')
-@click.option('--skip-none', is_flag=True)
+@click.option('--in', 'in_file', type=click.File('rb'), default=SITES_PICKLE,
+              help='The sites.pickle file to read')
+@click.option('--skip-none', is_flag=True, help="Don't include sites with no count")
 def html(in_file, skip_none):
     """Write an HTML report."""
     with in_file:
@@ -162,9 +164,9 @@ def html(in_file, skip_none):
     html_report("sites.html", sites, old, new, all_courses, all_orgs)
 
 
-@cli.command()
-@click.option('--in', 'in_file', type=click.File('rb'), default='sites.pickle')
-def update_json(in_file):
+@cli.command('json')
+@click.option('--in', 'in_file', type=click.File('rb'), default=SITES_PICKLE)
+def write_json(in_file):
     """Write the update.json file."""
     with in_file:
         sites = pickle.load(in_file)
@@ -336,6 +338,7 @@ def login(site, session):
 @cli.command()
 @click.argument('site', default=STATS_SITE)
 def getcsv(site):
+    """Get the sites.csv file from the app."""
     with requests.Session() as s:
         login(site, s)
         csv_url = urllib.parse.urljoin(site, "/sites/csv/?complete=1")
