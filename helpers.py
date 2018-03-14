@@ -1,5 +1,6 @@
 """Helpers for picking apart web data."""
 
+import hashlib
 import urllib.parse
 
 import lxml
@@ -57,3 +58,7 @@ def parse_text(pattern, text):
     if not result:
         raise ValueError(f"Couldn't apply pattern {pattern!r} to {text!r}")
     return result
+
+
+def fingerprint(text):
+    return hashlib.sha1(text).hexdigest()

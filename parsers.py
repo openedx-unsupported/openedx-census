@@ -10,6 +10,7 @@ from helpers import (
     parse_text,
     element_by_css, elements_by_css, elements_by_xpath,
     GotZero,
+    fingerprint,
 )
 from site_patterns import matches, matches_any
 
@@ -265,6 +266,7 @@ async def count_tiles(url, site, session):
             site.course_ids[course_id] += 1
     except Exception:
         pass
+    site.fingerprint = fingerprint(text)
     return count
 
 @matches_any
@@ -287,6 +289,7 @@ async def edx_search_post(site, session):
             site.course_ids[course["_id"]] += 1
     except Exception:
         pass
+    site.fingerprint = fingerprint(text)
     return count
 
 @matches_any

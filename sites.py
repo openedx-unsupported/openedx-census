@@ -19,6 +19,7 @@ class Site:
     course_ids = attr.ib(default=attr.Factory(collections.Counter))
     tried = attr.ib(default=attr.Factory(list))
     time = attr.ib(default=None)
+    fingerprint = attr.ib(default=None)
 
     def __eq__(self, other):
         return self.url == other.url
