@@ -167,8 +167,10 @@ def summarize(sites):
 @cli.command()
 @click.option('--in', 'in_file', type=click.File('rb'), default=SITES_PICKLE,
               help='The sites.pickle file to read')
+@click.option('--out', 'out_file', type=click.File('w'), default="sites.html",
+              help='The HTML file to write')
 @click.option('--skip-none', is_flag=True, help="Don't include sites with no count")
-def html(in_file, skip_none):
+def html(in_file, out_file, skip_none):
     """Write an HTML report."""
     with in_file:
         sites = pickle.load(in_file)
@@ -185,7 +187,7 @@ def html(in_file, skip_none):
 
     sites = sorted(sites, key=lambda s: s.url.split(".")[::-1])
     sites = sorted(sites, key=lambda s: s.current_courses or s.latest_courses, reverse=True)
-    html_report("sites.html", sites, old, new, all_courses, all_orgs)
+    html_report(out_file, sites, old, new, all_courses, all_orgs)
 
 
 @cli.command('json')
@@ -240,8 +242,7 @@ def text_report(in_file):
                 line = "Worked"
             print(f"    {strategy}: {line}")
 
-def html_report(outname, sites, old, new, all_courses=None, all_orgs=None):
-    with open(outname, "w") as htmlout:
+def html_report(out_file, sites, old, new, all_courses=None, all_orgs=None):
         CSS = """\
             html {
                 font-family: sans-serif;
@@ -277,7 +278,7 @@ def html_report(outname, sites, old, new, all_courses=None, all_orgs=None):
 
         """
 
-        writer = HtmlOutlineWriter(htmlout, css=CSS, title=f"Census: {len(sites)} sites")
+        writer = HtmlOutlineWriter(out_file, css=CSS, title=f"Census: {len(sites)} sites")
         header = f"{len(sites)} sites: {old}"
         if new != old:
             header += f" &rarr; {new}"
