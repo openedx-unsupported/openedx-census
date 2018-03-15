@@ -353,7 +353,7 @@ def html_report(out_file, sites, old, new, all_courses=None, all_orgs=None):
     writer.start_section(f"<p>Hashes</p>")
     fps = sorted(fps.items(), key=lambda kv: kv[1][0].current_courses, reverse=True)
     for fp, fp_sites in fps:
-        writer.start_section(f"{fp}: {fp_sites[0].current_courses} courses, {len(fp_sites)} sites")
+        writer.start_section(f"{fp}: <b>{fp_sites[0].current_courses}</b> courses, {len(fp_sites)} sites")
         for site in fp_sites:
             writer.write(f"<p><a class='url' href='{site.url}'>{site.url}</a></p>")
         writer.end_section()
