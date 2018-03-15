@@ -3,85 +3,49 @@ from xml.sax.saxutils import escape
 
 from html_writer import HtmlOutlineWriter
 
+CSS = """\
+    html {
+        font-family: sans-serif;
+    }
+
+    pre {
+        font-family: Consolas, monospace;
+    }
+
+    .url {
+        font-weight: bold;
+    }
+    .strategy {
+        font-style: italic;
+    }
+    .tag {
+        display: inline-block;
+        background: #cccccc;
+        font-size: 75%;
+        margin: 0 .1em .1em;
+        padding: 0 .3em;
+        border-radius: 3px;
+    }
+    .tag.slow {
+        background: #d5efa7;
+    }
+    .tag.none {
+        background: #f09393;
+    }
+    .tag.drastic {
+        background: #ebe377;
+    }
+"""
+
 
 def html_report(out_file, sites, old, new, all_courses=None, all_orgs=None):
-    CSS = """\
-        html {
-            font-family: sans-serif;
-        }
-
-        pre {
-            font-family: Consolas, monospace;
-        }
-
-        .url {
-            font-weight: bold;
-        }
-        .strategy {
-            font-style: italic;
-        }
-        .tag {
-            display: inline-block;
-            background: #cccccc;
-            font-size: 75%;
-            margin: 0 .1em .1em;
-            padding: 0 .3em;
-            border-radius: 3px;
-        }
-        .tag.slow {
-            background: #d5efa7;
-        }
-        .tag.none {
-            background: #f09393;
-        }
-        .tag.drastic {
-            background: #ebe377;
-        }
-
-    """
-
     writer = HtmlOutlineWriter(out_file, css=CSS, title=f"Census: {len(sites)} sites")
     header = f"{len(sites)} sites: {old}"
     if new != old:
         header += f" &rarr; {new}"
     writer.start_section(header)
     for site in sites:
-        old, new = site.latest_courses, site.current_courses
-        tags = []
-
-        def tag_it(text, tag_name=None):
-            tags.append(f"<span class='tag {tag_name or text.lower()}'>{text}</span>")
-        new_text = ""
-        if new is None:
-            tag_it("None")
-        else:
-            if new != old:
-                new_text = f"<b> &rarr; {new}</b>"
-            if abs(new - old) > 10 and not (0.5 >= old/new >= 1.5):
-                tag_it("Drastic")
-        if site.is_gone_now:
-            tag_it("Gone")
-        elif site.is_gone:
-            tag_it("Back")
-        # Times are not right now that we limit requests, not sites.
-        #if site.time > 5:
-        #    tag_it(f"{site.time:.1f}s", "slow")
-        writer.start_section(f"<a class='url' href='{site.url}'>{site.url}</a>: {old}{new_text} {''.join(tags)}")
-        for strategy, tb in site.tried:
-            if tb is not None:
-                lines = tb.splitlines()
-                if len(lines) > 1:
-                    line = tb.splitlines()[-1][:100]
-                    writer.start_section(f"<span class='strategy'>{strategy}:</span> {escape(line)}")
-                    writer.write("""<pre class="stdout">""")
-                    writer.write(escape(tb))
-                    writer.write("""</pre>""")
-                    writer.end_section()
-                else:
-                    writer.write(f"<p>{strategy}: {lines[0]}")
-            else:
-                writer.write(f"<p>{strategy}: worked</p>")
-        writer.end_section()
+        write_site(site, writer)
     writer.end_section()
 
     if all_courses:
@@ -119,3 +83,41 @@ def html_report(out_file, sites, old, new, all_courses=None, all_orgs=None):
     writer.end_section()
 
 
+def write_site(site, writer):
+    def tag_it(text, tag_name=None):
+        tags.append(f"<span class='tag {tag_name or text.lower()}'>{text}</span>")
+
+    old, new = site.latest_courses, site.current_courses
+    tags = []
+
+    new_text = ""
+    if new is None:
+        tag_it("None")
+    else:
+        if new != old:
+            new_text = f"<b> &rarr; {new}</b>"
+        if abs(new - old) > 10 and not (0.5 >= old/new >= 1.5):
+            tag_it("Drastic")
+    if site.is_gone_now:
+        tag_it("Gone")
+    elif site.is_gone:
+        tag_it("Back")
+    # Times are not right now that we limit requests, not sites.
+    #if site.time > 5:
+    #    tag_it(f"{site.time:.1f}s", "slow")
+    writer.start_section(f"<a class='url' href='{site.url}'>{site.url}</a>: {old}{new_text} {''.join(tags)}")
+    for strategy, tb in site.tried:
+        if tb is not None:
+            lines = tb.splitlines()
+            if len(lines) > 1:
+                line = tb.splitlines()[-1][:100]
+                writer.start_section(f"<span class='strategy'>{strategy}:</span> {escape(line)}")
+                writer.write("""<pre class="stdout">""")
+                writer.write(escape(tb))
+                writer.write("""</pre>""")
+                writer.end_section()
+            else:
+                writer.write(f"<p>{strategy}: {lines[0]}")
+        else:
+            writer.write(f"<p>{strategy}: worked</p>")
+    writer.end_section()
