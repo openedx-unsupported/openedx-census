@@ -327,9 +327,9 @@ def html_report(out_file, sites, old, new, all_courses=None, all_orgs=None):
         writer.start_section(f"<p>Course IDs: {total_course_ids}</p>")
         all_courses_items = sorted(all_courses.items())
         all_courses_items = sorted(all_courses_items, key=lambda item: len(item[1]), reverse=True)
-        for course_id, sites in all_courses_items:
-            writer.start_section(f"{course_id}: {len(sites)}")
-            for site in sites:
+        for course_id, cid_sites in all_courses_items:
+            writer.start_section(f"{course_id}: {len(cid_sites)}")
+            for site in cid_sites:
                 writer.write(f"<p><a class='url' href='{site.url}'>{site.url}</a></p>")
             writer.end_section()
         writer.end_section()
@@ -337,12 +337,24 @@ def html_report(out_file, sites, old, new, all_courses=None, all_orgs=None):
     if all_orgs:
         shared_orgs = [(org, sites) for org, sites in all_orgs.items() if len(sites) > 1]
         writer.start_section(f"<p>Shared orgs: {len(shared_orgs)}</p>")
-        for org, sites in sorted(shared_orgs):
-            writer.start_section(f"{org}: {len(sites)}")
-            for site in sites:
+        for org, org_sites in sorted(shared_orgs):
+            writer.start_section(f"{org}: {len(org_sites)}")
+            for site in org_sites:
                 writer.write(f"<p><a class='url' href='{site.url}'>{site.url}</a></p>")
             writer.end_section()
         writer.end_section()
+
+    fps = collections.defaultdict(list)
+    for site in sites:
+        fps[site.fingerprint].append(site)
+    writer.start_section(f"<p>Hashes</p>")
+    fps = sorted(fps.items(), key=lambda kv: kv[1][0].current_courses, reverse=True)
+    for fp, fp_sites in fps:
+        writer.start_section(f"{fp}: {fp_sites[0].current_courses} courses, {len(fp_sites)} sites")
+        for site in fp_sites:
+            writer.write(f"<p><a class='url' href='{site.url}'>{site.url}</a></p>")
+        writer.end_section()
+    writer.end_section()
 
 def json_update(sites, all_courses, include_overcount=False):
     data = {}
