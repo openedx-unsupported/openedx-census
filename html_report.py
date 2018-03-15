@@ -15,6 +15,10 @@ CSS = """\
     .url {
         font-weight: bold;
     }
+    .hash {
+        color: #aaa;
+        font-size: 75%;
+    }
     .strategy {
         font-style: italic;
     }
@@ -73,12 +77,20 @@ def html_report(out_file, sites, old, new, all_courses=None, all_orgs=None):
     fps = collections.defaultdict(list)
     for site in sites:
         fps[site.fingerprint].append(site)
-    writer.start_section(f"<p>Hashes</p>")
+    writer.start_section(f"<p>Hashed</p>")
     fps = sorted(fps.items(), key=lambda kv: kv[1][0].current_courses, reverse=True)
     for fp, fp_sites in fps:
-        writer.start_section(f"{fp}: <b>{fp_sites[0].current_courses}</b> courses, {len(fp_sites)} sites")
+        if fp is None:
+            continue
+        url = fp_sites[0].url
+        writer.start_section(
+            f"<a class='url' href='{url}'>{url}</a> "
+            f"<span class='hash'>{fp[:10]}</span>&nbsp; "
+            f"<b>{fp_sites[0].current_courses}</b> courses, "
+            f"{len(fp_sites)} sites"
+        )
         for site in fp_sites:
-            writer.write(f"<p><a class='url' href='{site.url}'>{site.url}</a></p>")
+            write_site(site, writer)
         writer.end_section()
     writer.end_section()
 
