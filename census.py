@@ -105,11 +105,14 @@ async def run(sites):
         print()
 
 def scrape_sites(sites):
-    loop = asyncio.get_event_loop()
-    future = asyncio.ensure_future(run(sites))
-    # Some exceptions go to stderr and then to my except clause? Shut up.
-    loop.set_exception_handler(lambda loop, context: None)
-    loop.run_until_complete(future)
+    try:
+        loop = asyncio.get_event_loop()
+        future = asyncio.ensure_future(run(sites))
+        # Some exceptions go to stderr and then to my except clause? Shut up.
+        loop.set_exception_handler(lambda loop, context: None)
+        loop.run_until_complete(future)
+    except KeyboardInterrupt:
+        pass
 
 @click.group(help=__doc__)
 def cli():
