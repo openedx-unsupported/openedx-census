@@ -289,7 +289,11 @@ async def edx_search_post(site, session):
             site.course_ids[course["_id"]] += 1
     except Exception:
         pass
-    site.fingerprint = fingerprint(text)
+    # The JSON has a "took" key, the time to respond, which we don't
+    # want in the fingerprint.
+    canon = dict(data)
+    del canon['took']
+    site.fingerprint = fingerprint(json.dumps(canon, sort_keys=True).encode('utf8'))
     return count
 
 @matches_any
