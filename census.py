@@ -187,9 +187,11 @@ def html(in_file, out_file, skip_none):
     with open("course-ids.txt", "w") as f:
         f.write("".join(i + "\n" for i in sorted(all_course_ids)))
 
+    known_sites = list(read_sites_csv(SITES_CSV))
+
     sites = sorted(sites, key=lambda s: s.url.split(".")[::-1])
     sites = sorted(sites, key=lambda s: s.current_courses or s.latest_courses, reverse=True)
-    html_report(out_file, sites, old, new, all_courses, all_orgs)
+    html_report(out_file, sites, old, new, all_courses, all_orgs, known_sites=known_sites)
 
 
 @cli.command('json')
@@ -212,8 +214,6 @@ def write_json(in_file):
 def refscrape(log_level, out_file, referrer_sites):
     """Visit sites and count their courses."""
     logging.basicConfig(level=log_level.upper())
-    known_sites = list(read_sites_csv(SITES_CSV))
-
     sites = read_sites_flat(referrer_sites)
     print(f"{len(sites)} sites")
 

@@ -39,17 +39,22 @@ CSS = """\
     .tag.drastic {
         background: #ebe377;
     }
+    .tag.new {
+        background: yellow;
+    }
 """
 
 
-def html_report(out_file, sites, old, new, all_courses=None, all_orgs=None):
+def html_report(out_file, sites, old, new, all_courses=None, all_orgs=None, known_sites=None):
+    known_domains = {site.url.split('//', 1)[-1] for site in known_sites}
+
     writer = HtmlOutlineWriter(out_file, css=CSS, title=f"Census: {len(sites)} sites")
     header = f"{len(sites)} sites: {old}"
     if new != old:
         header += f" &rarr; {new}"
     writer.start_section(header)
     for site in sites:
-        write_site(site, writer)
+        write_site(site, writer, known_domains)
     writer.end_section()
 
     if all_courses:
@@ -82,42 +87,45 @@ def html_report(out_file, sites, old, new, all_courses=None, all_orgs=None):
     for fp, fp_sites in fps:
         if fp is None:
             continue
+        tags = Tags()
         url = fp_sites[0].url
+        any_known = any(is_known(site, known_domains) for site in fp_sites)
+        if not any_known:
+            tags.add("New")
         writer.start_section(
             f"<a class='url' href='{url}'>{url}</a> "
             f"<span class='hash'>{fp[:10]}</span>&nbsp; "
             f"<b>{fp_sites[0].current_courses}</b> courses, "
-            f"{len(fp_sites)} sites"
+            f"{len(fp_sites)} sites {tags.html()}"
         )
         for site in fp_sites:
-            write_site(site, writer)
+            write_site(site, writer, known_domains)
         writer.end_section()
     writer.end_section()
 
 
-def write_site(site, writer):
-    def tag_it(text, tag_name=None):
-        tags.append(f"<span class='tag {tag_name or text.lower()}'>{text}</span>")
-
+def write_site(site, writer, known_domains):
     old, new = site.latest_courses, site.current_courses
-    tags = []
+    tags = Tags()
 
     new_text = ""
     if new is None:
-        tag_it("None")
+        tags.add("None")
     else:
         if new != old:
             new_text = f"<b> &rarr; {new}</b>"
-        if abs(new - old) > 10 and not (0.5 >= old/new >= 1.5):
-            tag_it("Drastic")
+        if old != 0 and abs(new - old) > 10 and not (0.5 >= old/new >= 1.5):
+            tags.add("Drastic")
     if site.is_gone_now:
-        tag_it("Gone")
+        tags.add("Gone")
     elif site.is_gone:
-        tag_it("Back")
+        tags.add("Back")
+    if not is_known(site, known_domains):
+        tags.add("New")
     # Times are not right now that we limit requests, not sites.
     #if site.time > 5:
-    #    tag_it(f"{site.time:.1f}s", "slow")
-    writer.start_section(f"<a class='url' href='{site.url}'>{site.url}</a>: {old}{new_text} {''.join(tags)}")
+    #    tags.add(f"{site.time:.1f}s", "slow")
+    writer.start_section(f"<a class='url' href='{site.url}'>{site.url}</a>: {old}{new_text} {tags.html()}")
     for strategy, tb in site.tried:
         if tb is not None:
             lines = tb.splitlines()
@@ -133,3 +141,17 @@ def write_site(site, writer):
         else:
             writer.write(f"<p>{strategy}: worked</p>")
     writer.end_section()
+
+
+def is_known(site, known_domains):
+    return site.url.split('//', 1)[-1] in known_domains
+
+class Tags:
+    def __init__(self):
+        self.tags = []
+
+    def add(self, text, tag_name=None):
+        self.tags.append(f"<span class='tag {tag_name or text.lower()}'>{text}</span>")
+
+    def html(self):
+        return ''.join(self.tags)
