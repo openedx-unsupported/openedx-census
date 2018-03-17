@@ -119,7 +119,7 @@ def cli():
 
 @cli.command()
 @click.option('--log', 'log_level', type=str, default='info')
-@click.option('--min', type=int, default=1)
+@click.option('--min', type=int, default=0)
 @click.option('--gone', is_flag=True)
 @click.option('--site', is_flag=True)
 @click.option('--out', 'out_file', type=click.File('wb'), default=SITES_PICKLE)
