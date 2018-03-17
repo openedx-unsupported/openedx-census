@@ -7,3 +7,4 @@ save_*.*
 course-ids.txt
 update.json
 keys.py
+.ipynb_checkpoints
