@@ -75,7 +75,7 @@ def html_report(out_file, sites, old, new, all_courses=None, all_orgs=None, know
         writer.start_section(f"<p>Shared orgs: {len(shared_orgs)}</p>")
         for org, org_sites in sorted(shared_orgs):
             writer.start_section(f"{org}: {len(org_sites)}")
-            for site in org_sites:
+            for site in sorted(org_sites, key=lambda s: s.url):
                 writer.write(f"<p><a class='url' href='{site.url}'>{site.url}</a></p>")
             writer.end_section()
         writer.end_section()
