@@ -62,3 +62,7 @@ def parse_text(pattern, text):
 
 def fingerprint(text):
     return hashlib.sha1(text).hexdigest()
+
+
+def domain_from_url(url):
+    return urllib.parse.urlparse(url).netloc

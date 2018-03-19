@@ -1,6 +1,7 @@
 import collections
 from xml.sax.saxutils import escape
 
+from helpers import domain_from_url
 from html_writer import HtmlOutlineWriter
 
 CSS = """\
@@ -46,7 +47,7 @@ CSS = """\
 
 
 def html_report(out_file, sites, old, new, all_courses=None, all_orgs=None, known_sites=None):
-    known_domains = {site.url.split('//', 1)[-1] for site in known_sites}
+    known_domains = {domain_from_url(site.url) for site in known_sites}
 
     writer = HtmlOutlineWriter(out_file, css=CSS, title=f"Census: {len(sites)} sites")
     header = f"{len(sites)} sites: {old}"
@@ -144,7 +145,7 @@ def write_site(site, writer, known_domains):
 
 
 def is_known(site, known_domains):
-    return site.url.split('//', 1)[-1] in known_domains
+    return domain_from_url(site.url) in known_domains
 
 class Tags:
     def __init__(self):
