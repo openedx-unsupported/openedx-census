@@ -9,3 +9,4 @@ edx-opaque-keys
 parse
 asyncio_extras
 tqdm
+pytest

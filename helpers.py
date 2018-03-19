@@ -1,6 +1,7 @@
 """Helpers for picking apart web data."""
 
 import hashlib
+import re
 import urllib.parse
 
 import lxml
@@ -59,10 +60,19 @@ def parse_text(pattern, text):
         raise ValueError(f"Couldn't apply pattern {pattern!r} to {text!r}")
     return result
 
-
 def fingerprint(text):
     return hashlib.sha1(text).hexdigest()
 
-
 def domain_from_url(url):
     return urllib.parse.urlparse(url).netloc
+
+CHAFF_WORDS = set("""
+    staging preview demo dev sandbox test loadtest
+    trafficmanager cloudapp
+    dogwood eucalyptus ficus ginkgo hawthorn
+    """.split())
+
+def is_chaff_domain(domain):
+    """Is this domain something we should ignore?"""
+    parts = re.split(r"[.-]", domain)
+    return any(part.rstrip("0123456789") in CHAFF_WORDS for part in parts)

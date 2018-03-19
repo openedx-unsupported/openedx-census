@@ -1,7 +1,7 @@
 import collections
 from xml.sax.saxutils import escape
 
-from helpers import domain_from_url
+from helpers import domain_from_url, is_chaff_domain
 from html_writer import HtmlOutlineWriter
 
 CSS = """\
@@ -90,9 +90,13 @@ def html_report(out_file, sites, old, new, all_courses=None, all_orgs=None, know
             continue
         tags = Tags()
         url = fp_sites[0].url
-        any_known = any(is_known(site, known_domains) for site in fp_sites)
-        if not any_known:
-            tags.add("New")
+        all_chaff = all(is_chaff_domain(domain_from_url(site.url)) for site in fp_sites)
+        if all_chaff:
+            tags.add("Chaff")
+        else:
+            any_known = any(is_known(site, known_domains) for site in fp_sites)
+            if not any_known:
+                tags.add("New")
         writer.start_section(
             f"<a class='url' href='{url}'>{url}</a> "
             f"<span class='hash'>{fp[:10]}</span>&nbsp; "
@@ -121,7 +125,9 @@ def write_site(site, writer, known_domains):
         tags.add("Gone")
     elif site.is_gone:
         tags.add("Back")
-    if not is_known(site, known_domains):
+    if is_chaff_domain(domain_from_url(site.url)):
+        tags.add("Chaff")
+    elif not is_known(site, known_domains):
         tags.add("New")
     # Times are not right now that we limit requests, not sites.
     #if site.time > 5:

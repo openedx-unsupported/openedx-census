@@ -8,3 +8,4 @@ course-ids.txt
 update.json
 keys.py
 .ipynb_checkpoints
+.pytest_cache
