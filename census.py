@@ -17,7 +17,7 @@ import click
 import requests
 import tqdm
 
-from helpers import ScrapeFail
+from helpers import ScrapeFail, domain_from_url
 from html_report import html_report
 from keys import username, password
 from session import SmartSession
@@ -188,11 +188,13 @@ def html(in_file, out_file, skip_none, only_new):
     with open("course-ids.txt", "w") as f:
         f.write("".join(i + "\n" for i in sorted(all_course_ids)))
 
-    known_sites = list(read_sites_csv(SITES_CSV))
+    known_domains = {domain_from_url(site.url) for site in read_sites_csv(SITES_CSV)}
+    with open("aliases.txt") as aliases:
+        known_domains.update(domain_from_url(line.strip()) for line in aliases)
 
     sites = sorted(sites, key=lambda s: s.url.split(".")[::-1])
     sites = sorted(sites, key=lambda s: s.current_courses or s.latest_courses, reverse=True)
-    html_report(out_file, sites, old, new, all_courses, all_orgs, known_sites=known_sites, only_new=only_new)
+    html_report(out_file, sites, old, new, all_courses, all_orgs, known_domains=known_domains, only_new=only_new)
 
 
 @cli.command('json')

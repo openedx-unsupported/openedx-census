@@ -46,8 +46,7 @@ CSS = """\
 """
 
 
-def html_report(out_file, sites, old, new, all_courses=None, all_orgs=None, known_sites=None, only_new=False):
-    known_domains = {domain_from_url(site.url) for site in known_sites}
+def html_report(out_file, sites, old, new, all_courses=None, all_orgs=None, known_domains=None, only_new=False):
 
     writer = HtmlOutlineWriter(out_file, css=CSS, title=f"Census: {len(sites)} sites")
     header = f"{len(sites)} sites: {old}"
