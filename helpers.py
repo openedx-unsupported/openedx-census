@@ -64,7 +64,7 @@ def fingerprint(text):
     return hashlib.sha1(text).hexdigest()
 
 def domain_from_url(url):
-    return urllib.parse.urlparse(url).netloc
+    return urllib.parse.urlparse(url).netloc or url
 
 CHAFF_WORDS = set("""
     staging preview demo dev sandbox test loadtest

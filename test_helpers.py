@@ -1,6 +1,15 @@
 import pytest
 
-from helpers import is_chaff_domain
+from helpers import domain_from_url, is_chaff_domain
+
+@pytest.mark.parametrize("domain, url", [
+    ("http://nedbatchelder.com/hello", "nedbatchelder.com"),
+    ("https://nedbatchelder.com", "nedbatchelder.com"),
+    ("nedbatchelder.com", "nedbatchelder.com"),
+    ("http://hello.nedbatchelder.com/", "hello.nedbatchelder.com"),
+])
+def test_domain_from_url(domain, url):
+    assert domain_from_url(domain) == url
 
 @pytest.mark.parametrize("domain, is_chaff", [
     ("nedbatchelder.com", False),
