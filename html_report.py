@@ -46,7 +46,7 @@ CSS = """\
 """
 
 
-def html_report(out_file, sites, old, new, all_courses=None, all_orgs=None, known_sites=None):
+def html_report(out_file, sites, old, new, all_courses=None, all_orgs=None, known_sites=None, only_new=False):
     known_domains = {domain_from_url(site.url) for site in known_sites}
 
     writer = HtmlOutlineWriter(out_file, css=CSS, title=f"Census: {len(sites)} sites")
@@ -90,13 +90,17 @@ def html_report(out_file, sites, old, new, all_courses=None, all_orgs=None, know
             continue
         tags = Tags()
         url = fp_sites[0].url
-        all_chaff = all(is_chaff_domain(domain_from_url(site.url)) for site in fp_sites)
-        if all_chaff:
+        is_new = False
+        is_chaff = all(is_chaff_domain(domain_from_url(site.url)) for site in fp_sites)
+        if is_chaff:
             tags.add("Chaff")
         else:
             any_known = any(is_known(site, known_domains) for site in fp_sites)
-            if not any_known:
-                tags.add("New")
+            is_new = not any_known
+        if only_new and not is_new:
+            continue
+        if is_new:
+            tags.add("New")
         writer.start_section(
             f"<a class='url' href='{url}'>{url}</a> "
             f"<span class='hash'>{fp[:10]}</span>&nbsp; "

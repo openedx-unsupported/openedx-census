@@ -172,7 +172,8 @@ def summarize(sites):
 @click.option('--out', 'out_file', type=click.File('w'), default="sites.html",
               help='The HTML file to write')
 @click.option('--skip-none', is_flag=True, help="Don't include sites with no count")
-def html(in_file, out_file, skip_none):
+@click.option('--only-new', is_flag=True, help="Only include sites we think are new")
+def html(in_file, out_file, skip_none, only_new):
     """Write an HTML report."""
     with in_file:
         sites = pickle.load(in_file)
@@ -191,7 +192,7 @@ def html(in_file, out_file, skip_none):
 
     sites = sorted(sites, key=lambda s: s.url.split(".")[::-1])
     sites = sorted(sites, key=lambda s: s.current_courses or s.latest_courses, reverse=True)
-    html_report(out_file, sites, old, new, all_courses, all_orgs, known_sites=known_sites)
+    html_report(out_file, sites, old, new, all_courses, all_orgs, known_sites=known_sites, only_new=only_new)
 
 
 @cli.command('json')
