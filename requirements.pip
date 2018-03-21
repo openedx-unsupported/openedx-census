@@ -10,3 +10,4 @@ parse
 asyncio_extras
 tqdm
 pytest
+requests
