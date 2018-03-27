@@ -1,0 +1,16 @@
+\.amazonaws.com$
+\.google\.
+sandbox.*\.opencraft\.hosting$
+sandbox.*\.opencraft\.com$
+\.mail\.yahoo\.com$
+vps.+\.ovh\.net$
+\.ngrok\.io$
+\.xip\.io$
+\.testdrive\.reancloud\.com$
+proxy-live\.transifex.com$
+\.cloudfront\.net$
+^.....\.club$
+[:*( ]
+^[0-9.]+$
+\.sandbox\.edx\.org$
+^[a-z0-9-]+$
