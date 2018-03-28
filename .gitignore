@@ -9,3 +9,5 @@ update.json
 keys.py
 .ipynb_checkpoints
 .pytest_cache
+aliases.txt
+referers.txt
