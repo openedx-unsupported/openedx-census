@@ -7,18 +7,16 @@ gauge how many courses they are running.
 
 Requires Python 3.6 (or greater).
 
-Requires a sites.csv file.
+- Scraping all referrers::
 
-Then::
+  $ . get-domains.sh
+  $ ./census.py refscrape --out refsites.pickle referers.txt
+  $ ./census.py html --in refsites.pickle --out referrer-sites.html --skip-none --only-new
 
-    $ pip install -r requirements.pip
-    python census.py --min=200
-    6 sites
-    ......
-    http://www.xuetangx.com: 860 --> 867
-    https://www.france-universite-numerique-mooc.fr: 364 --> 372
-    http://courses.zsmu.edu.ua: 316 --> 328
-    https://courses.openedu.tw: 251 --> 249
-    https://openedu.ru: 247 --> 251
-    https://puroom.net: 205 --> 221
-    Found courses went from 2243 to 2288
+- Scraping all known sites::
+
+  $ ./census.py getcsv && ./census.py scrape --gone && ./census.py summary && ./census.py html
+
+- After scraping known sites, updating the database::
+
+  $ ./census.py json && ./census.py post
