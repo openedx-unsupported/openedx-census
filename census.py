@@ -34,9 +34,13 @@ SITES_CSV = "sites.csv"
 SITES_PICKLE = "sites.pickle"
 
 
-MAX_REQUESTS = 100
+MAX_REQUESTS = 50
 TIMEOUT = 30
 USER_AGENT = "Open edX census-taker. Tell us about your site: oscm+census@edx.org"
+
+HEADERS = {
+    'User-Agent': USER_AGENT,
+}
 
 GONE_MSGS = [
     "Cannot connect to host",
@@ -45,63 +49,56 @@ GONE_MSGS = [
     "503",
 ]
 
-async def parse_site(site, session):
-    start = time.time()
-    errs = []
-    for parser, args, kwargs in find_site_functions(site.url):
-        try:
-            site.current_courses = await parser(site, session, *args, **kwargs)
-        except ScrapeFail as exc:
-            site.tried.append((parser.__name__, f"{exc.__class__.__name__}: {exc}"))
-            err = str(exc) or exc.__class__.__name__
-        except Exception as exc:
-            site.tried.append((parser.__name__, traceback.format_exc()))
-            err = str(exc) or exc.__class__.__name__
-        else:
-            site.tried.append((parser.__name__, None))
-            if site.is_gone:
-                char = 'B'
+async def parse_site(site):
+    async with SmartSession(timeout=TIMEOUT, headers=HEADERS) as session:
+        start = time.time()
+        errs = []
+        for parser, args, kwargs in find_site_functions(site.url):
+            try:
+                site.current_courses = await parser(site, session, *args, **kwargs)
+            except ScrapeFail as exc:
+                site.tried.append((parser.__name__, f"{exc.__class__.__name__}: {exc}"))
+                err = str(exc) or exc.__class__.__name__
+            except Exception as exc:
+                site.tried.append((parser.__name__, traceback.format_exc()))
+                err = str(exc) or exc.__class__.__name__
             else:
-                if site.current_courses == site.latest_courses:
-                    char = '='
-                elif site.current_courses < site.latest_courses:
-                    char = '-'
+                site.tried.append((parser.__name__, None))
+                if site.is_gone:
+                    char = 'B'
                 else:
-                    char = '+'
-            break
-        errs.append(err)
-    else:
-        if all(any(msg in err for msg in GONE_MSGS) for err in errs):
-            site.is_gone_now = True
-            if site.is_gone:
-                char = 'X'
-            else:
-                char = 'G'
+                    if site.current_courses == site.latest_courses:
+                        char = '='
+                    elif site.current_courses < site.latest_courses:
+                        char = '-'
+                    else:
+                        char = '+'
+                break
+            errs.append(err)
         else:
-            char = 'E'
+            if all(any(msg in err for msg in GONE_MSGS) for err in errs):
+                site.is_gone_now = True
+                if site.is_gone:
+                    char = 'X'
+                else:
+                    char = 'G'
+            else:
+                char = 'E'
 
-    site.time = time.time() - start
-    return char
+        site.time = time.time() - start
+        return char
 
 async def run(sites):
-    tasks = []
-
-    headers = {
-        'User-Agent': USER_AGENT,
-    }
-    async with SmartSession(max_requests=MAX_REQUESTS, timeout=TIMEOUT, headers=headers) as session:
-        for site in sites:
-            task = asyncio.ensure_future(parse_site(site, session))
-            tasks.append(task)
-
-        chars = collections.Counter()
-        progress = tqdm.tqdm(asyncio.as_completed(tasks), total=len(tasks))
-        for completed in progress:
-            char = await completed
-            chars[char] += 1
-            desc = " ".join(f"{c}{v}" for c, v in sorted(chars.items()))
-            progress.set_description(desc)
-        print()
+    SmartSession.limit_requests(MAX_REQUESTS)
+    tasks = [asyncio.ensure_future(parse_site(site)) for site in sites]
+    chars = collections.Counter()
+    progress = tqdm.tqdm(asyncio.as_completed(tasks), total=len(tasks))
+    for completed in progress:
+        char = await completed
+        chars[char] += 1
+        desc = " ".join(f"{c}{v}" for c, v in sorted(chars.items()))
+        progress.set_description(desc)
+    print()
 
 def scrape_sites(sites):
     try:

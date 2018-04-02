@@ -126,7 +126,7 @@ def write_site(site, writer, known_domains):
     else:
         if new != old:
             new_text = f"<b> &rarr; {new}</b>"
-        if old != 0 and abs(new - old) > 10 and not (0.5 >= old/new >= 1.5):
+        if old != 0 and new != 0 and abs(new - old) > 10 and not (0.5 >= old/new >= 1.5):
             tags.add("Drastic")
     if site.is_gone_now:
         tags.add("Gone")
