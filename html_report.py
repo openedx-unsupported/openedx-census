@@ -88,7 +88,6 @@ def html_report(out_file, sites, old, new, all_courses=None, all_orgs=None, know
         if fp is None:
             continue
         tags = Tags()
-        url = fp_sites[0].url
         is_new = False
         is_chaff = all(is_chaff_domain(domain_from_url(site.url)) for site in fp_sites)
         if is_chaff:
@@ -100,6 +99,11 @@ def html_report(out_file, sites, old, new, all_courses=None, all_orgs=None, know
             continue
         if is_new:
             tags.add("New")
+        non_chaff = [site for site in fp_sites if not is_chaff_domain(site.url)]
+        if non_chaff:
+            url = non_chaff[0].url
+        else:
+            url = fp_sites[0].url
         writer.start_section(
             f"<a class='url' href='{url}'>{url}</a> "
             f"<span class='hash'>{fp[:10]}</span>&nbsp; "
