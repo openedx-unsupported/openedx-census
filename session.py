@@ -16,13 +16,8 @@ log = logging.getLogger(__name__)
 REQUEST_KWARGS = dict(verify_ssl=False)
 
 class SmartSession:
-    sem = None
-
-    @classmethod
-    def limit_requests(cls, max_requests):
-        cls.sem = asyncio.Semaphore(max_requests)
-
-    def __init__(self, timeout=20, headers=None):
+    def __init__(self, sem, timeout=20, headers=None):
+        self.sem = sem
         self.timeout = timeout
         self.session = aiohttp.ClientSession(headers=headers or {}, raise_for_status=True)
         self.save_numbers = itertools.count()
@@ -84,4 +79,10 @@ class SmartSession:
         async with self.request(url) as resp:
             return str(resp.url)
 
-SmartSession.limit_requests(10)
+class SessionFactory:
+    def __init__(self, max_requests=10, **kwargs):
+        self.sem = asyncio.Semaphore(max_requests)
+        self.session_kwargs = kwargs
+
+    def new(self, **kwargs):
+        return SmartSession(self.sem, **self.session_kwargs, **kwargs)

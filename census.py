@@ -20,7 +20,7 @@ import tqdm
 from helpers import ScrapeFail, domain_from_url
 from html_report import html_report
 from keys import username, password
-from session import SmartSession
+from session import SessionFactory
 from sites import Site, read_sites_csv, courses_and_orgs, totals, read_sites_flat
 from site_patterns import find_site_functions
 
@@ -49,8 +49,8 @@ GONE_MSGS = [
     "503",
 ]
 
-async def parse_site(site):
-    async with SmartSession(timeout=TIMEOUT, headers=HEADERS) as session:
+async def parse_site(site, session_factory):
+    async with session_factory.new() as session:
         start = time.time()
         errs = []
         for parser, args, kwargs in find_site_functions(site.url):
@@ -89,8 +89,8 @@ async def parse_site(site):
         return char
 
 async def run(sites):
-    SmartSession.limit_requests(MAX_REQUESTS)
-    tasks = [asyncio.ensure_future(parse_site(site)) for site in sites]
+    factory = SessionFactory(max_requests=MAX_REQUESTS, timeout=TIMEOUT, headers=HEADERS)
+    tasks = [asyncio.ensure_future(parse_site(site, factory)) for site in sites]
     chars = collections.Counter()
     progress = tqdm.tqdm(asyncio.as_completed(tasks), total=len(tasks))
     for completed in progress:
