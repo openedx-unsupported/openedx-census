@@ -67,7 +67,7 @@ def domain_from_url(url):
     return urllib.parse.urlparse(url).netloc or url
 
 CHAFF_WORDS = set("""
-    staging preview demo dev sandbox test loadtest
+    stage staging preview demo dev sandbox test loadtest qa
     trafficmanager cloudapp
     dogwood eucalyptus ficus ginkgo hawthorn
     """.split())
