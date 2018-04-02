@@ -144,8 +144,11 @@ def scrape(log_level, min, gone, site, out_file, site_patterns):
     # SCRAPE!
     scrape_sites(sites)
 
-    with out_file:
-        pickle.dump(sites, out_file)
+    if site:
+        show_text_report(sites)
+    else:
+        with out_file:
+            pickle.dump(sites, out_file)
 
 @cli.command()
 @click.option('--in', 'in_file', type=click.File('rb'), default=SITES_PICKLE,
@@ -231,7 +234,9 @@ def text_report(in_file):
     """Write a text report about site scraping."""
     with in_file:
         sites = pickle.load(in_file)
+    show_text_report(sites)
 
+def show_text_report(sites):
     old, new = totals(sites)
     sites = sorted(sites, key=lambda s: s.latest_courses, reverse=True)
     print(f"Found courses went from {old} to {new}")
