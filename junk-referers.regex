@@ -2,6 +2,7 @@
 \.google\.
 sandbox.*\.opencraft\.hosting$
 sandbox.*\.opencraft\.com$
+(discovery-|ecommerce-|preview-).*\.opencraft\.hosting$
 \.mail\.yahoo\.com$
 vps.+\.ovh\.net$
 \.ngrok\.io$
