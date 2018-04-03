@@ -136,6 +136,8 @@ def write_site(site, writer, known_domains):
         tags.add("Chaff")
     elif not is_known(site, known_domains):
         tags.add("New")
+    if site.ssl_err:
+        tags.add("SSL")
     # Times are not right now that we limit requests, not sites.
     #if site.time > 5:
     #    tags.add(f"{site.time:.1f}s", "slow")

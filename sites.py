@@ -18,6 +18,7 @@ class Site:
     is_gone_now = attr.ib(default=False)
     course_ids = attr.ib(default=attr.Factory(collections.Counter))
     tried = attr.ib(default=attr.Factory(list))
+    ssl_err = False
     time = attr.ib(default=None)
     fingerprint = attr.ib(default=None)
 

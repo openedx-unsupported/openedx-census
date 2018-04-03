@@ -50,43 +50,48 @@ GONE_MSGS = [
 ]
 
 async def parse_site(site, session_factory):
-    async with session_factory.new() as session:
-        start = time.time()
-        errs = []
-        for parser, args, kwargs in find_site_functions(site.url):
-            try:
-                site.current_courses = await parser(site, session, *args, **kwargs)
-            except ScrapeFail as exc:
-                site.tried.append((parser.__name__, f"{exc.__class__.__name__}: {exc}"))
-                err = str(exc) or exc.__class__.__name__
-            except Exception as exc:
-                site.tried.append((parser.__name__, traceback.format_exc()))
-                err = str(exc) or exc.__class__.__name__
-            else:
-                site.tried.append((parser.__name__, None))
-                if site.is_gone:
-                    char = 'B'
+    for verify_ssl in [True, False]:
+        async with session_factory.new(verify_ssl=verify_ssl) as session:
+            start = time.time()
+            errs = []
+            for parser, args, kwargs in find_site_functions(site.url):
+                try:
+                    site.current_courses = await parser(site, session, *args, **kwargs)
+                except ScrapeFail as exc:
+                    site.tried.append((parser.__name__, f"{exc.__class__.__name__}: {exc}"))
+                    err = str(exc) or exc.__class__.__name__
+                except Exception as exc:
+                    site.tried.append((parser.__name__, traceback.format_exc()))
+                    err = str(exc) or exc.__class__.__name__
                 else:
-                    if site.current_courses == site.latest_courses:
-                        char = '='
-                    elif site.current_courses < site.latest_courses:
-                        char = '-'
+                    site.tried.append((parser.__name__, None))
+                    if site.is_gone:
+                        char = 'B'
                     else:
-                        char = '+'
-                break
-            errs.append(err)
-        else:
-            if all(any(msg in err for msg in GONE_MSGS) for err in errs):
-                site.is_gone_now = True
-                if site.is_gone:
-                    char = 'X'
-                else:
-                    char = 'G'
+                        if site.current_courses == site.latest_courses:
+                            char = '='
+                        elif site.current_courses < site.latest_courses:
+                            char = '-'
+                        else:
+                            char = '+'
+                    break
+                errs.append(err)
             else:
-                char = 'E'
+                if verify_ssl and all("certificate verify failed" in err for err in errs):
+                    site.ssl_err = True
+                    site.tried = []
+                    continue
+                if all(any(msg in err for msg in GONE_MSGS) for err in errs):
+                    site.is_gone_now = True
+                    if site.is_gone:
+                        char = 'X'
+                    else:
+                        char = 'G'
+                else:
+                    char = 'E'
 
-        site.time = time.time() - start
-        return char
+            site.time = time.time() - start
+            return char
 
 async def run(sites):
     factory = SessionFactory(max_requests=MAX_REQUESTS, timeout=TIMEOUT, headers=HEADERS)

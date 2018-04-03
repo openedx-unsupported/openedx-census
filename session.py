@@ -13,12 +13,11 @@ from helpers import HttpError
 
 log = logging.getLogger(__name__)
 
-REQUEST_KWARGS = dict(verify_ssl=False)
-
 class SmartSession:
-    def __init__(self, sem, timeout=20, headers=None):
+    def __init__(self, sem, timeout=20, headers=None, **kwargs):
         self.sem = sem
         self.timeout = timeout
+        self.kwargs = kwargs
         self.session = aiohttp.ClientSession(headers=headers or {}, raise_for_status=True)
         self.save_numbers = itertools.count()
         self.save = bool(int(os.environ.get('SAVE', 0)))
@@ -40,7 +39,7 @@ class SmartSession:
             log.debug("%s %s", method.upper(), url)
             with async_timeout.timeout(self.timeout):
                 try:
-                    async with self.session.request(method, url, **kwargs, **REQUEST_KWARGS) as response:
+                    async with self.session.request(method, url, **self.kwargs, **kwargs) as response:
                         yield response
                 except aiohttp.ClientError as exc:
                     code = getattr(exc, 'code', str(exc))
