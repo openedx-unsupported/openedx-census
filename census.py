@@ -50,6 +50,11 @@ GONE_MSGS = [
     "404",
 ]
 
+CERTIFICATE_MSGS = [
+    "certificate verify failed",
+    "CertificateError:",
+]
+
 async def parse_site(site, session_factory):
     for verify_ssl in [True, False]:
         async with session_factory.new(verify_ssl=verify_ssl) as session:
@@ -78,7 +83,7 @@ async def parse_site(site, session_factory):
                     break
                 errs.append(err)
             else:
-                if verify_ssl and all("certificate verify failed" in err for err in errs):
+                if verify_ssl and all(any(msg in err for msg in CERTIFICATE_MSGS) for err in errs):
                     site.ssl_err = True
                     site.tried = []
                     continue
