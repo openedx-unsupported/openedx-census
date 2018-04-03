@@ -46,6 +46,7 @@ GONE_MSGS = [
     "Cannot connect to host",
     "Bad Gateway",
     "TimeoutError",
+    "500",
     "503",
     "404",
 ]
