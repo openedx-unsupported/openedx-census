@@ -47,6 +47,7 @@ GONE_MSGS = [
     "Bad Gateway",
     "TimeoutError",
     "503",
+    "404",
 ]
 
 async def parse_site(site, session_factory):
