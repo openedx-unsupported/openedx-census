@@ -160,7 +160,14 @@ def write_site(site, writer, known_domains):
 
 
 def is_known(site, known_domains):
-    return domain_from_url(site.url) in known_domains
+    domain = domain_from_url(site.url)
+    for prefix in ['', 'www.']:
+        dom = domain
+        if domain.startswith(prefix):
+            dom = domain[len(prefix):]
+        if dom in known_domains:
+            return True
+    return False
 
 class Tags:
     def __init__(self):
