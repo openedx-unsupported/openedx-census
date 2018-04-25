@@ -94,16 +94,11 @@ async def millionlights_parser(site, session):
 
 @matches("vlabs.ac.in")
 async def vlabs_parser(site, session):
-    url = "https://vlabs.ac.in/"
+    url = "https://lds.vlabs.ac.in/labs?cached=1"
     text = await session.text_from_url(url)
-    for elt in elements_by_css(text, "div.features div:first-child div h3"):
-        try:
-            result = parse_text("Labs {:d}", elt.text)
-        except ValueError:
-            pass
-        else:
-            return result[0]
-    raise GotZero("Didn't find the Labs h3")
+    data = json.loads(text)
+    count = len(data)
+    return count
 
 @matches("enlightme.net")
 async def enlightme_parser(site, session):
