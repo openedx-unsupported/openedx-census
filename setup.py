@@ -21,8 +21,19 @@ setup(
         'Programming Language :: Python :: 3',
     ],
     install_requires=[
-        'affine',
+        'aiohttp',
+        'aiodns',
+        'asyncio_extras',
+        'async_timeout',
+        'attrs',
+        'edx-opaque-keys',
+        'lxml',
         'click',
+        'cssselect',
+        'parse',
+        'pytest',
+        'requests',
+        'tqdm',
     ],
     entry_points='''
         [console_scripts]
