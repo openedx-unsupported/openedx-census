@@ -64,7 +64,7 @@ def html_report(out_file, sites, old, new, all_courses=None, all_orgs=None, know
         all_courses_items = sorted(all_courses_items, key=lambda item: len(item[1]), reverse=True)
         for course_id, cid_sites in all_courses_items:
             writer.start_section(f"{course_id}: {len(cid_sites)}")
-            for site in cid_sites:
+            for site in sorted(cid_sites, key=lambda s: s.url):
                 writer.write(f"<p><a class='url' href='{site.url}'>{site.url}</a></p>")
             writer.end_section()
         writer.end_section()
