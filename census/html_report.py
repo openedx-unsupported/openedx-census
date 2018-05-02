@@ -1,8 +1,9 @@
 import collections
 from xml.sax.saxutils import escape
 
-from census.helpers import domain_from_url, is_chaff_domain
+from census.helpers import domain_from_url, is_chaff_domain, is_known
 from census.html_writer import HtmlOutlineWriter
+from census.sites import HashedSite
 
 CSS = """\
     html {
@@ -79,38 +80,35 @@ def html_report(out_file, sites, old, new, all_courses=None, all_orgs=None, know
             writer.end_section()
         writer.end_section()
 
-    fps = collections.defaultdict(list)
+    hashed_sites = collections.defaultdict(HashedSite)
     for site in sites:
-        fps[site.fingerprint].append(site)
+        hashed_site = hashed_sites[site.fingerprint]
+        hashed_site.fingerprint = site.fingerprint
+        hashed_site.sites.append(site)
+
     writer.start_section(f"<p>Hashed</p>")
-    fps = sorted(fps.items(), key=lambda kv: kv[1][0].current_courses, reverse=True)
-    for fp, fp_sites in fps:
+    hashed_sites = sorted(hashed_sites.items(), key=lambda kv: kv[1].current_courses(), reverse=True)
+    for fp, hashed_site in hashed_sites:
         if fp is None:
             continue
         tags = Tags()
         is_new = False
-        is_chaff = all(is_chaff_domain(domain_from_url(site.url)) for site in fp_sites)
-        if is_chaff:
+        if hashed_site.all_chaff():
             tags.add("Chaff")
         else:
-            any_known = any(is_known(site, known_domains) for site in fp_sites)
-            is_new = not any_known
+            is_new = not hashed_site.any_known(known_domains)
         if only_new and not is_new:
             continue
         if is_new:
             tags.add("New")
-        non_chaff = [site for site in fp_sites if not is_chaff_domain(site.url)]
-        if non_chaff:
-            url = non_chaff[0].url
-        else:
-            url = fp_sites[0].url
+        url = hashed_site.best_url()
         writer.start_section(
             f"<a class='url' href='{url}'>{url}</a> "
             f"<span class='hash'>{fp[:10]}</span>&nbsp; "
-            f"<b>{fp_sites[0].current_courses}</b> courses, "
-            f"{len(fp_sites)} sites {tags.html()}"
+            f"<b>{hashed_site.current_courses()}</b> courses, "
+            f"{len(hashed_site.sites)} sites {tags.html()}"
         )
-        for site in fp_sites:
+        for site in hashed_site.sites:
             write_site(site, writer, known_domains)
         writer.end_section()
     writer.end_section()
@@ -158,16 +156,6 @@ def write_site(site, writer, known_domains):
             writer.write(f"<p>{strategy}: worked</p>")
     writer.end_section()
 
-
-def is_known(site, known_domains):
-    domain = domain_from_url(site.url)
-    for prefix in ['', 'www.']:
-        dom = domain
-        if domain.startswith(prefix):
-            dom = domain[len(prefix):]
-        if dom in known_domains:
-            return True
-    return False
 
 class Tags:
     def __init__(self):

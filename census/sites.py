@@ -5,6 +5,7 @@ import attr
 import opaque_keys
 import opaque_keys.edx.keys
 
+from census.helpers import domain_from_url, is_chaff_domain, is_known
 
 @attr.s(cmp=False, frozen=False)
 class Site:
@@ -51,6 +52,29 @@ class Site:
         if self.current_courses != self.latest_courses:
             return True
         return False
+
+
+@attr.s()
+class HashedSite:
+    fingerprint = attr.ib(default=None)
+    sites = attr.ib(default=attr.Factory(list))
+
+    def current_courses(self):
+        return self.sites[0].current_courses
+
+    def all_chaff(self):
+        return all(is_chaff_domain(domain_from_url(site.url)) for site in self.sites)
+
+    def any_known(self, known_domains):
+        return any(is_known(site, known_domains) for site in self.sites)
+
+    def best_url(self):
+        non_chaff = [site for site in self.sites if not is_chaff_domain(site.url)]
+        if non_chaff:
+            url = non_chaff[0].url
+        else:
+            url = self.sites[0].url
+        return url
 
 
 def clean_url(url):
