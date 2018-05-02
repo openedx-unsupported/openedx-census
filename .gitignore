@@ -11,3 +11,4 @@ census/keys.py
 .pytest_cache
 aliases.txt
 referers.txt
+*.egg-info
