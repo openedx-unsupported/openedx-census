@@ -1,6 +1,6 @@
 import pytest
 
-from helpers import domain_from_url, is_chaff_domain
+from census.helpers import domain_from_url, is_chaff_domain
 
 @pytest.mark.parametrize("domain, url", [
     ("http://nedbatchelder.com/hello", "nedbatchelder.com"),

@@ -5,14 +5,14 @@ import json
 import re
 import urllib.parse
 
-from helpers import (
+from census.helpers import (
     site_url,
     parse_text,
     element_by_css, elements_by_css, elements_by_xpath,
     GotZero,
     fingerprint,
 )
-from site_patterns import matches, matches_any
+from census.site_patterns import matches, matches_any
 
 # XuetangX: add up courses by institution.
 @matches("www.xuetangx.com")

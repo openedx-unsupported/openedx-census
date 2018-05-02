@@ -8,7 +8,7 @@ import aiohttp
 import async_timeout
 from asyncio_extras.contextmanager import async_contextmanager
 
-from helpers import HttpError
+from census.helpers import HttpError
 
 
 log = logging.getLogger(__name__)

@@ -17,15 +17,15 @@ import click
 import requests
 import tqdm
 
-from helpers import ScrapeFail, domain_from_url
-from html_report import html_report
-from keys import username, password
-from session import SessionFactory
-from sites import Site, read_sites_csv, courses_and_orgs, totals, read_sites_flat
-from site_patterns import find_site_functions
+from census.helpers import ScrapeFail, domain_from_url
+from census.html_report import html_report
+from census.keys import username, password
+from census.session import SessionFactory
+from census.sites import Site, read_sites_csv, courses_and_orgs, totals, read_sites_flat
+from census.site_patterns import find_site_functions
 
 # We don't use anything from this module, it just registers all the parsers.
-import parsers
+from census import parsers
 
 
 STATS_SITE = "http://openedxstats.herokuapp.com"

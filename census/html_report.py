@@ -1,8 +1,8 @@
 import collections
 from xml.sax.saxutils import escape
 
-from helpers import domain_from_url, is_chaff_domain
-from html_writer import HtmlOutlineWriter
+from census.helpers import domain_from_url, is_chaff_domain
+from census.html_writer import HtmlOutlineWriter
 
 CSS = """\
     html {

@@ -6,7 +6,7 @@ save_*.*
 *.pickle
 course-ids.txt
 update.json
-keys.py
+census/keys.py
 .ipynb_checkpoints
 .pytest_cache
 aliases.txt
