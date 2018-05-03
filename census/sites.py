@@ -5,7 +5,9 @@ import attr
 import opaque_keys
 import opaque_keys.edx.keys
 
-from census.helpers import domain_from_url, is_chaff_domain, is_known
+from census.helpers import (
+    domain_from_url, is_chaff_domain, is_known, fingerprint,
+)
 
 @attr.s(cmp=False, frozen=False)
 class Site:
@@ -21,7 +23,7 @@ class Site:
     tried = attr.ib(default=attr.Factory(list))
     ssl_err = False
     time = attr.ib(default=None)
-    fingerprint = attr.ib(default=None)
+    fingerprint = attr.ib(default="")
 
     def __eq__(self, other):
         return self.url == other.url
@@ -36,6 +38,9 @@ class Site:
     @classmethod
     def from_url(cls, url):
         return cls(clean_url(url), latest_courses=0, is_gone=False)
+
+    def add_to_fingerprint(self, text):
+        self.fingerprint = fingerprint(self.fingerprint.encode('ascii') + text)
 
     def should_update(self):
         """Should we update this site in the database?"""

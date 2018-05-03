@@ -10,7 +10,6 @@ from census.helpers import (
     parse_text,
     element_by_css, elements_by_css, elements_by_xpath,
     GotZero,
-    fingerprint,
 )
 from census.site_patterns import matches, matches_any
 
@@ -19,6 +18,7 @@ from census.site_patterns import matches, matches_any
 async def xuetang_parser(site, session):
     url = "http://www.xuetangx.com/partners"
     text = await session.text_from_url(url)
+    site.add_to_fingerprint(text)
     section = elements_by_xpath(text, "/html/body/article[1]/section")
     assert len(section) == 1
     assert section[0].xpath("h2")[0].text == "开课院校"
@@ -36,6 +36,7 @@ async def xuetang_parser(site, session):
 async def fun_parser(site, session):
     url = "https://www.fun-mooc.fr/fun/api/courses/?rpp=50&page=1"
     text = await session.text_from_url(url)
+    site.add_to_fingerprint(text)
     data = json.loads(text)
     return data['count']
 
@@ -43,6 +44,7 @@ async def fun_parser(site, session):
 async def openedu_tw_parser(site, session):
     url = "https://www.openedu.tw/rest/courses/query"
     text = await session.text_from_url(url)
+    site.add_to_fingerprint(text)
     data = json.loads(text)
     return len(data)
 
@@ -50,6 +52,7 @@ async def openedu_tw_parser(site, session):
 async def openedu_ru_parser(site, session):
     url = "https://openedu.ru/course/"
     text = await session.text_from_url(url)
+    site.add_to_fingerprint(text)
     count = element_by_css(text, "span#courses-found")
     assert " кур" in count.text
     return int(count.text.split()[0])
@@ -58,11 +61,13 @@ async def openedu_ru_parser(site, session):
 async def gacco_parser(site, session):
     url = "http://gacco.org/data/course/gacco_list.json"
     text = await session.text_from_url(url)
+    site.add_to_fingerprint(text)
     data = json.loads(text)
     count = len(data["opened_courses"])
 
     url = "http://gacco.org/data/course/gacco_archive.json"
     text = await session.text_from_url(url)
+    site.add_to_fingerprint(text)
     data = json.loads(text)
     count += len(data["archived_courses"])
     return count
@@ -75,6 +80,7 @@ async def gacco_parser(site, session):
 async def count_elements_parser(site, session, rel_url, css):
     url = site_url(site, rel_url)
     text = await session.text_from_url(url)
+    site.add_to_fingerprint(text)
     elts = elements_by_css(text, css)
     count = len(elts)
     return count
@@ -83,6 +89,7 @@ async def count_elements_parser(site, session, rel_url, css):
 async def millionlights_parser(site, session):
     url = "https://www.millionlights.org/Course/AllCourses"
     text = await session.text_from_url(url)
+    site.add_to_fingerprint(text)
     # Find the language-faceted results, and add up their parenthesized
     # numbers.
     elts = elements_by_xpath(text, "//a[contains(text(), 'English (')]/ancestor::ul//a")
@@ -96,6 +103,7 @@ async def millionlights_parser(site, session):
 async def vlabs_parser(site, session):
     url = "https://lds.vlabs.ac.in/labs?cached=1"
     text = await session.text_from_url(url)
+    site.add_to_fingerprint(text)
     data = json.loads(text)
     count = len(data)
     return count
@@ -104,6 +112,7 @@ async def vlabs_parser(site, session):
 async def enlightme_parser(site, session):
     url = "https://www.enlightme.net/courses/"
     text = await session.text_from_url(url)
+    site.add_to_fingerprint(text)
     elt = element_by_css(text, ".course-index span")
     result = parse_text("Showing 1-10 of {:d} results", elt.text)
     return result[0]
@@ -112,6 +121,7 @@ async def enlightme_parser(site, session):
 async def hku_hk_parser(site, session):
     url = "https://skills.med.hku.hk/mbbs_admin/public/downloadMbbsJsonFile"
     text = await session.text_from_url(url)
+    site.add_to_fingerprint(text)
     data = json.loads(text)
     count = len(data)
     return count
@@ -120,6 +130,7 @@ async def hku_hk_parser(site, session):
 async def hku_nursing_parser(site, session):
     url = "https://skillvideo.nursing.hku.hk/nurs_admin/public/downloadNursJsonFile"
     text = await session.text_from_url(url)
+    site.add_to_fingerprint(text)
     data = json.loads(text)
     count = len(data)
     return count
@@ -128,6 +139,7 @@ async def hku_nursing_parser(site, session):
 async def learning_hku_parser(site, session):
     url = "https://learning.hku.hk/catalog/all-courses/"
     text = await session.text_from_url(url)
+    site.add_to_fingerprint(text)
     elt = element_by_css(text, "li#course-all span")
     count = int(elt.text)
     return count
@@ -136,6 +148,7 @@ async def learning_hku_parser(site, session):
 async def iitbombayx_parser(site, session):
     url = "https://iitbombayx.in/courses"
     text = await session.text_from_url(url)
+    site.add_to_fingerprint(text)
     elts = elements_by_css(text, "#block-timeline-2 .facet-item__count")
     count = 0
     for elt in elts:
@@ -146,6 +159,7 @@ async def iitbombayx_parser(site, session):
 async def edraak_org_parser(site, session):
     url = "https://www.edraak.org/en/courses/"
     text = await session.text_from_url(url)
+    site.add_to_fingerprint(text)
     elts = elements_by_css(text, "aside.all-courses div.course span")
     count = 0
     for elt in elts:
@@ -156,6 +170,7 @@ async def edraak_org_parser(site, session):
 async def edcast_org_parser(site, session):
     url = "https://www.edcast.org/search"
     text = await session.text_from_url(url)
+    site.add_to_fingerprint(text)
     h4 = element_by_css(text, ".search-navigation-row h4")
     result = parse_text("All Courses ({:d} matches)", h4.text)
     return result[0]
@@ -167,6 +182,7 @@ async def cognitiveclass_parser(site, session):
     count = 0
     while True:
         text = await session.text_from_url(url)
+        site.add_to_fingerprint(text)
         elts = elements_by_css(text, "article.course.card")
         count += len(elts)
         # Find the a element with '>' as the text, get its href.
@@ -181,6 +197,7 @@ async def cognitiveclass_parser(site, session):
 async def entuze_parser(site, session):
     url = site_url(site, "/course_packages/")
     text = await session.text_from_url(url)
+    site.add_to_fingerprint(text)
     elt = element_by_css(text, "div#discovery-message")
     result = parse_text("Viewing {:d} courses", elt.text)
     return result[0]
@@ -195,6 +212,7 @@ async def gotoclass_parser(site, session):
     count = 0
     while True:
         text = await session.text_from_url(url)
+        site.add_to_fingerprint(text)
         elts = elements_by_css(text, "div.course-block")
         count += len(elts)
         next_a = elements_by_css(text, "a.next.page-numbers")
@@ -208,6 +226,7 @@ async def gotoclass_parser(site, session):
 async def learn_in_th_parser(site, session):
     url = site_url(site, "/main/frontend/ListCourses/listSearch/1")
     text = await session.text_from_url(url)
+    site.add_to_fingerprint(text)
     data = json.loads(text)
     return data['all_row']
 
@@ -217,6 +236,7 @@ async def edx_org_parser(site, session):
     count = 0
     while True:
         text = await session.text_from_url(url)
+        site.add_to_fingerprint(text)
         data = json.loads(text)
         objs = data['objects']['results']
         count += len(objs)
@@ -267,7 +287,7 @@ async def count_tiles(url, site, session):
     lines = text.splitlines(keepends=True)
     lines = [line for line in lines if b"window.NREUM||(NREUM={})" not in line]
     text = b''.join(lines)
-    site.fingerprint = fingerprint(text)
+    site.add_to_fingerprint(text)
     return count
 
 @matches_any
@@ -294,7 +314,7 @@ async def edx_search_post(site, session):
     # want in the fingerprint.
     canon = dict(data)
     del canon['took']
-    site.fingerprint = fingerprint(json.dumps(canon, sort_keys=True).encode('utf8'))
+    site.add_to_fingerprint(json.dumps(canon, sort_keys=True).encode('utf8'))
     return count
 
 @matches_any
