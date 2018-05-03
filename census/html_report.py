@@ -86,11 +86,9 @@ def html_report(out_file, sites, old, new, all_courses=None, all_orgs=None, know
         hashed_site.fingerprint = site.fingerprint
         hashed_site.sites.append(site)
 
-    writer.start_section(f"<p>Hashed</p>")
+    writer.start_section(f"<p>Hashed: {len(hashed_sites)}</p>")
     hashed_sites = sorted(hashed_sites.items(), key=lambda kv: kv[1].current_courses(), reverse=True)
     for fp, hashed_site in hashed_sites:
-        if fp is None:
-            continue
         tags = Tags()
         is_new = False
         if hashed_site.all_chaff():

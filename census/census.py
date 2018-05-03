@@ -197,9 +197,10 @@ def summarize(sites):
             hashed_site.sites.append(site)
 
     print(f"{len(nohash_sites)} with no hash, {len(hashed_sites)} with hash")
-    print("No hash:")
-    for site in nohash_sites:
-        print(f" {site.best_url()}: {site.current_courses()}")
+    if nohash_sites:
+        print("No hash:")
+        for site in nohash_sites:
+            print(f" {site.best_url()}: {site.current_courses()}")
     chaff_sites = []
     not_chaff_sites = []
     for hashed_site in itertools.chain(hashed_sites.values(), nohash_sites):
