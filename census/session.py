@@ -14,13 +14,13 @@ from census.helpers import HttpError
 log = logging.getLogger(__name__)
 
 class SmartSession:
-    def __init__(self, sem, timeout=20, headers=None, **kwargs):
+    def __init__(self, sem, timeout=20, headers=None, save=False, saver=None, **kwargs):
         self.sem = sem
         self.timeout = timeout
         self.kwargs = kwargs
         self.session = aiohttp.ClientSession(headers=headers or {}, raise_for_status=True)
-        self.save_numbers = itertools.count()
-        self.save = bool(int(os.environ.get('SAVE', 0)))
+        self.save = save
+        self.saver = saver
 
     async def __aenter__(self):
         await self.session.__aenter__()
@@ -64,14 +64,8 @@ class SmartSession:
                 code = getattr(exc, 'code', str(exc))
                 raise HttpError(f"{code} {method} {url}")
 
-        if save or self.save:
-            num = next(self.save_numbers)
-            ext = re.split(r"[+/]", response.content_type)[-1]
-            save_name = f"save_{num:03d}.{ext}"
-            with open(f"save_index.txt", "a") as idx:
-                print(f"{save_name}: {url} ({response.status})", file=idx)
-            with open(save_name, "wb") as f:
-                f.write(text)
+        if self.saver and (save or self.save):
+            self.saver(url, text, response)
         return text
 
     async def real_url(self, url):
@@ -82,6 +76,17 @@ class SessionFactory:
     def __init__(self, max_requests=10, **kwargs):
         self.sem = asyncio.Semaphore(max_requests)
         self.session_kwargs = kwargs
+        self.save_numbers = itertools.count()
 
     def new(self, **kwargs):
-        return SmartSession(self.sem, **self.session_kwargs, **kwargs)
+        save = bool(int(os.environ.get('SAVE', 0)))
+        return SmartSession(self.sem, save=save, saver=self.saver, **self.session_kwargs, **kwargs)
+
+    def saver(self, url, text, response):
+        num = next(self.save_numbers)
+        ext = re.split(r"[+/]", response.content_type)[-1]
+        save_name = f"save_{num:03d}.{ext}"
+        with open(f"save_index.txt", "a") as idx:
+            print(f"{save_name}: {url} ({response.status})", file=idx)
+        with open(save_name, "wb") as f:
+            f.write(text)
