@@ -283,10 +283,6 @@ async def count_tiles(url, site, session):
             site.course_ids[course_id] += 1
     except Exception:
         pass
-    # Remove noise from the fingerprint.
-    lines = text.splitlines(keepends=True)
-    lines = [line for line in lines if b"window.NREUM||(NREUM={})" not in line]
-    text = b''.join(lines)
     site.add_to_fingerprint(text)
     return count
 

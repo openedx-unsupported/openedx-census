@@ -284,7 +284,7 @@ def show_text_report(sites):
     sites = sorted(sites, key=lambda s: s.latest_courses, reverse=True)
     print(f"Found courses went from {old} to {new}")
     for site in sites:
-        print(f"{site.url}: {site.latest_courses} --> {site.current_courses}")
+        print(f"{site.url}: {site.latest_courses} --> {site.current_courses} ({site.fingerprint})")
         for strategy, tb in site.tried:
             if tb is not None:
                 line = tb.splitlines()[-1]

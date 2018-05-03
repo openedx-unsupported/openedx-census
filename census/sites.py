@@ -39,8 +39,18 @@ class Site:
     def from_url(cls, url):
         return cls(clean_url(url), latest_courses=0, is_gone=False)
 
+    IGNORE_LINE_FRAGMENTS = [
+        b"window.NREUM||(NREUM={})",
+        b"<input type='hidden' name='csrfmiddlewaretoken'",
+    ]
+
     def add_to_fingerprint(self, text):
-        self.fingerprint = fingerprint(self.fingerprint.encode('ascii') + text)
+        # Remove noise from the fingerprint.
+        lines = text.splitlines(keepends=True)
+        lines = [l for l in lines if not any(frag in l for frag in self.IGNORE_LINE_FRAGMENTS)]
+        lines.append(self.fingerprint.encode('ascii'))
+        text = b''.join(lines)
+        self.fingerprint = fingerprint(text)
 
     def should_update(self):
         """Should we update this site in the database?"""
