@@ -3,6 +3,7 @@
 
 import asyncio
 import collections
+import itertools
 import json
 import logging
 import pickle
@@ -21,7 +22,7 @@ from census.helpers import ScrapeFail, domain_from_url
 from census.html_report import html_report
 from census.keys import username, password
 from census.session import SessionFactory
-from census.sites import Site, read_sites_csv, courses_and_orgs, totals, read_sites_flat
+from census.sites import Site, HashedSite, read_sites_csv, courses_and_orgs, totals, read_sites_flat
 from census.site_patterns import find_site_functions
 
 # We don't use anything from this module, it just registers all the parsers.
@@ -176,7 +177,37 @@ def summarize(sites):
     changed = sum(1 for s in sites if s.should_update())
     gone = sum(1 for s in sites if s.is_gone_now and not s.is_gone)
     back = sum(1 for s in sites if not s.is_gone_now and s.is_gone and s.current_courses)
+    print(f"{len(sites)} sites.")
     print(f"Courses: {old} --> {new} ({new-old:+d});   Sites: {changed} changed, {gone} gone, {back} back")
+
+    hashed_sites = collections.defaultdict(HashedSite)
+    nohash_sites = []
+    for site in sites:
+        if site.is_gone_now:
+            continue
+        if not site.current_courses:
+            continue
+        if site.fingerprint is None:
+            hashed_site = HashedSite()
+            hashed_site.sites.append(site)
+            nohash_sites.append(hashed_site)
+        else:
+            hashed_site = hashed_sites[site.fingerprint]
+            hashed_site.fingerprint = site.fingerprint
+            hashed_site.sites.append(site)
+
+    print(f"{len(nohash_sites)} with no hash, {len(hashed_sites)} with hash")
+    print("No hash:")
+    for site in nohash_sites:
+        print(f" {site.best_url()}: {site.current_courses()}")
+    chaff_sites = []
+    not_chaff_sites = []
+    for hashed_site in itertools.chain(hashed_sites.values(), nohash_sites):
+        if hashed_site.all_chaff():
+            chaff_sites.append(hashed_site)
+        else:
+            not_chaff_sites.append(hashed_site)
+    print(f"Total sites: {len(not_chaff_sites)} not chaff, {len(chaff_sites)} chaff")
 
 @cli.command()
 @click.option('--in', 'in_file', type=click.File('rb'), default=SITES_PICKLE,
