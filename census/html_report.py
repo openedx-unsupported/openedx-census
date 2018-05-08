@@ -87,7 +87,7 @@ def html_report(out_file, sites, old, new, all_courses=None, all_orgs=None, know
         hashed_site.sites.append(site)
 
     writer.start_section(f"<p>Hashed: {len(hashed_sites)}</p>")
-    hashed_sites = sorted(hashed_sites.items(), key=lambda kv: kv[1].current_courses(), reverse=True)
+    hashed_sites = sorted(hashed_sites.items(), key=lambda kv: kv[1].current_courses() or 0, reverse=True)
     for fp, hashed_site in hashed_sites:
         tags = Tags()
         is_new = False
