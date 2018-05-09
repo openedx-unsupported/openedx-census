@@ -50,7 +50,9 @@ class SmartSession:
         if came_from:
             async with self.request(came_from) as resp:
                 real_url = str(resp.url)
-                x = await resp.read()
+                from_text = await resp.read()
+            if self.saver and (save or self.save):
+                self.saver(url, from_text, resp)
             cookies = self.session.cookie_jar.filter_cookies(url)
             if 'csrftoken' in cookies:
                 headers['X-CSRFToken'] = cookies['csrftoken'].value
@@ -87,6 +89,6 @@ class SessionFactory:
         ext = re.split(r"[+/]", response.content_type)[-1]
         save_name = f"save_{num:03d}.{ext}"
         with open(f"save_index.txt", "a") as idx:
-            print(f"{save_name}: {url} ({response.status})", file=idx)
+            print(f"{save_name}: {response.method} {url} ({response.status})", file=idx)
         with open(save_name, "wb") as f:
             f.write(text)
