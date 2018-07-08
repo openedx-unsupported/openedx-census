@@ -100,11 +100,13 @@ def html_report(out_file, sites, old, new, all_courses=None, all_orgs=None, know
         if is_new:
             tags.add("New")
         url = hashed_site.best_url()
+        ncourses = hashed_site.current_courses()
+        nsites = len(hashed_site.sites)
         writer.start_section(
-            f"<a class='url' href='{url}'>{url}</a> "
-            f"<span class='hash'>{fp[:10]}</span>&nbsp; "
-            f"<b>{hashed_site.current_courses()}</b> courses, "
-            f"{len(hashed_site.sites)} sites {tags.html()}"
+            f"<a class='url' href='{url}'>{url}</a>&nbsp; "
+            #f"<span class='hash'>{fp[:10]}</span>&nbsp; "
+            f"<b>{ncourses}</b> {pluralize(ncourses, 'course')}, "
+            f"{nsites} {pluralize(nsites, 'site')} {tags.html()}"
         )
         for site in hashed_site.sites:
             write_site(site, writer, known_domains)
@@ -164,3 +166,13 @@ class Tags:
 
     def html(self):
         return ''.join(self.tags)
+
+
+def pluralize(n, s, ss=None):
+    """Make a word plural (in English)"""
+    if ss is None:
+        ss = s + "s"
+    if n == 1:
+        return s
+    else:
+        return ss
