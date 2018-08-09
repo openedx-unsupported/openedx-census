@@ -79,7 +79,7 @@ def is_known(site, known_domains):
 CHAFF_WORDS = set("""
     stage staging preview demo dev sandbox test loadtest qa
     trafficmanager cloudapp
-    dogwood eucalyptus ficus ginkgo hawthorn
+    aspen birch cypress dogwood eucalyptus ficus ginkgo hawthorn ironwood
     """.split())
 
 def is_chaff_domain(domain):
@@ -87,11 +87,18 @@ def is_chaff_domain(domain):
     parts = re.split(r"[.-]", domain)
     return any(part.rstrip("0123456789") in CHAFF_WORDS for part in parts)
 
+SNIPS = [
+    ('ginkgo', b'<a class="nav-skip sr-only sr-only-focusable" href="#main">'),
+    ('euc-fic', b'<a class="nav-skip" href="#main">'),
+    ('dogwood', b'<a class="nav-skip" href="#content">'),
+    ('cypress', b'<script type="text/javascript" src="/jsi18n/"></script>'),
+]
+
 def sniff_version(text):
     meta = b'<meta name="openedx-release-line" content="'
     if meta in text:
         release = text.partition(meta)[2].partition(b'"')[0]
         return release.decode()
-    ginkgo_skip = b'<a class="nav-skip sr-only sr-only-focusable" href="#main">'
-    if ginkgo_skip in text:
-        return 'ginkgo'
+    for version, snip in SNIPS:
+        if snip in text:
+            return version
