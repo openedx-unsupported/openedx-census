@@ -6,7 +6,7 @@ import opaque_keys
 import opaque_keys.edx.keys
 
 from census.helpers import (
-    domain_from_url, is_chaff_domain, is_known, fingerprint,
+    domain_from_url, is_chaff_domain, is_known, fingerprint, sniff_version
 )
 
 @attr.s(cmp=False, frozen=False)
@@ -24,6 +24,7 @@ class Site:
     ssl_err = False
     time = attr.ib(default=None)
     fingerprint = attr.ib(default="")
+    version = attr.ib(default=None)
 
     def __eq__(self, other):
         return self.url == other.url
@@ -51,6 +52,7 @@ class Site:
         lines.append(self.fingerprint.encode('ascii'))
         text = b''.join(lines)
         self.fingerprint = fingerprint(text)
+        self.version = sniff_version(text)
 
     def should_update(self):
         """Should we update this site in the database?"""

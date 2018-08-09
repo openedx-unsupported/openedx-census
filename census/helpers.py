@@ -86,3 +86,12 @@ def is_chaff_domain(domain):
     """Is this domain something we should ignore?"""
     parts = re.split(r"[.-]", domain)
     return any(part.rstrip("0123456789") in CHAFF_WORDS for part in parts)
+
+def sniff_version(text):
+    meta = b'<meta name="openedx-release-line" content="'
+    if meta in text:
+        release = text.partition(meta)[2].partition(b'"')[0]
+        return release.decode()
+    ginkgo_skip = b'<a class="nav-skip sr-only sr-only-focusable" href="#main">'
+    if ginkgo_skip in text:
+        return 'ginkgo'

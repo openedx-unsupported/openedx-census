@@ -44,6 +44,11 @@ CSS = """\
     .tag.new {
         background: yellow;
     }
+    .tag.version {
+        background: lime;
+        border-radius: 1em;
+        padding: 0 .5em;
+    }
 """
 
 
@@ -136,6 +141,8 @@ def write_site(site, writer, known_domains):
         tags.add("New")
     if site.ssl_err:
         tags.add("SSL")
+    if site.version:
+        tags.add(site.version, "version")
     # Times are not right now that we limit requests, not sites.
     #if site.time > 5:
     #    tags.add(f"{site.time:.1f}s", "slow")
