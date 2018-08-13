@@ -43,6 +43,11 @@ CSS = """\
     }
     .tag.new {
         background: yellow;
+        border: 1px solid #ddd;
+        margin: -1px 0;
+    }
+    .tag.ssl {
+        background: #ff8080;
     }
     .tag.version {
         background: lime;
@@ -104,6 +109,8 @@ def html_report(out_file, sites, old, new, all_courses=None, all_orgs=None, know
             continue
         if is_new:
             tags.add("New")
+        if all(site.ssl_err for site in hashed_site.sites):
+            tags.add("SSL")
         url = hashed_site.best_url()
         ncourses = hashed_site.current_courses()
         nsites = len(hashed_site.sites)
