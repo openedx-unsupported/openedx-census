@@ -50,6 +50,7 @@ GONE_MSGS = [
     "500",
     "503",
     "404",
+    "530 get http",     # Cloudflare DNS failures
 ]
 
 CERTIFICATE_MSGS = [
@@ -177,7 +178,7 @@ def summarize(sites):
     changed = sum(1 for s in sites if s.should_update())
     gone = sum(1 for s in sites if s.is_gone_now and not s.is_gone)
     back = sum(1 for s in sites if not s.is_gone_now and s.is_gone and s.current_courses)
-    print(f"{len(sites)} sites.")
+    print(f"{len(sites)} sites")
     print(f"Courses: {old} --> {new} ({new-old:+d});   Sites: {changed} changed, {gone} gone, {back} back")
 
     hashed_sites = collections.defaultdict(HashedSite)
