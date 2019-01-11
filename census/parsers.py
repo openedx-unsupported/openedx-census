@@ -32,9 +32,9 @@ async def xuetang_parser(site, session):
     return courses
 
 # FUN has an api that returns a count.
-@matches("france-universite-numerique-mooc.fr")
+@matches("fun-mooc.fr")
 async def fun_parser(site, session):
-    url = "https://www.fun-mooc.fr/fun/api/courses/?rpp=50&page=1"
+    url = site_url(site, "/fun/api/courses/?rpp=50&page=1")
     text = await session.text_from_url(url)
     site.add_to_fingerprint(text)
     data = json.loads(text)
