@@ -230,6 +230,14 @@ async def learn_in_th_parser(site, session):
     data = json.loads(text)
     return data['all_row']
 
+@matches("openu.kz")
+async def openu_kz_parser(site, session):
+    text = await session.text_from_url(site.url)
+    site.add_to_fingerprint(text)
+    stat_elt = elements_by_css(text, ".statistics-block .statistics-block__value")[0]
+    count = int(stat_elt.text)
+    return count
+
 @matches("www.edx.org")
 async def edx_org_parser(site, session):
     url = site_url(site, "/api/v1/catalog/search?page=1&page_size=200")
