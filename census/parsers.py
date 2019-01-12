@@ -99,15 +99,6 @@ async def millionlights_parser(site, session):
         count += result[1]
     return count
 
-@matches("vlabs.ac.in")
-async def vlabs_parser(site, session):
-    url = "https://lds.vlabs.ac.in/labs?cached=1"
-    text = await session.text_from_url(url)
-    site.add_to_fingerprint(text)
-    data = json.loads(text)
-    count = len(data)
-    return count
-
 @matches("enlightme.net")
 async def enlightme_parser(site, session):
     url = "https://www.enlightme.net/courses/"
