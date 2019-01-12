@@ -49,6 +49,12 @@ CSS = """\
     .tag.ssl {
         background: #ff8080;
     }
+    .tag.bad {
+        background: red;
+        border: 2px solid black;
+        color: white;
+        padding: 0 .5em;
+    }
     .tag.version {
         background: lime;
         border-radius: 1em;
@@ -148,6 +154,8 @@ def write_site(site, writer, known_domains):
         tags.add("New")
     if site.ssl_err:
         tags.add("SSL")
+    if site.custom_parser_err:
+        tags.add("Custom parser error", "bad")
     if site.version:
         tags.add(site.version, "version")
     # Times are not right now that we limit requests, not sites.

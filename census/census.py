@@ -63,7 +63,7 @@ async def parse_site(site, session_factory):
         async with session_factory.new(verify_ssl=verify_ssl) as session:
             start = time.time()
             errs = []
-            for parser, args, kwargs in find_site_functions(site.url):
+            for parser, args, kwargs, custom_parser in find_site_functions(site.url):
                 try:
                     site.current_courses = await parser(site, session, *args, **kwargs)
                 except ScrapeFail as exc:
@@ -85,10 +85,13 @@ async def parse_site(site, session_factory):
                             char = '+'
                     break
                 errs.append(err)
+                if custom_parser:
+                    site.custom_parser_err = True
             else:
                 if verify_ssl and all(any(msg in err for msg in CERTIFICATE_MSGS) for err in errs):
                     site.ssl_err = True
                     site.tried = []
+                    site.custom_parser_err = False
                     continue
                 if all(any(msg in err for msg in GONE_MSGS) for err in errs):
                     site.is_gone_now = True

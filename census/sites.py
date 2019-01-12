@@ -22,6 +22,7 @@ class Site:
     course_ids = attr.ib(default=attr.Factory(collections.Counter))
     tried = attr.ib(default=attr.Factory(list))
     ssl_err = False
+    custom_parser_err = False
     time = attr.ib(default=None)
     fingerprint = attr.ib(default="")
     version = attr.ib(default=None)
