@@ -74,21 +74,28 @@ class SmartSession:
         async with self.request(url) as resp:
             return str(resp.url)
 
+
+class Saver:
+    def __init__(self, dir="save"):
+        self.save_numbers = itertools.count()
+        self.dir = dir
+
+    def save(self, url, text, response):
+        os.makedirs(self.dir, exist_ok=True)
+        num = next(self.save_numbers)
+        ext = re.split(r"[+/]", response.content_type)[-1]
+        save_name = f"{num:03d}.{ext}"
+        with open(os.path.join(self.dir, "index.txt"), "a") as idx:
+            print(f"{save_name}: {response.method} {url} ({response.status})", file=idx)
+        with open(os.path.join(self.dir, save_name), "wb") as f:
+            f.write(text)
+
+
 class SessionFactory:
     def __init__(self, max_requests=10, **kwargs):
         self.sem = asyncio.Semaphore(max_requests)
         self.session_kwargs = kwargs
-        self.save_numbers = itertools.count()
 
     def new(self, **kwargs):
         save = bool(int(os.environ.get('SAVE', 0)))
-        return SmartSession(self.sem, save=save, saver=self.saver, **self.session_kwargs, **kwargs)
-
-    def saver(self, url, text, response):
-        num = next(self.save_numbers)
-        ext = re.split(r"[+/]", response.content_type)[-1]
-        save_name = f"save_{num:03d}.{ext}"
-        with open(f"save_index.txt", "a") as idx:
-            print(f"{save_name}: {response.method} {url} ({response.status})", file=idx)
-        with open(save_name, "wb") as f:
-            f.write(text)
+        return SmartSession(self.sem, save=save, saver=Saver().save, **self.session_kwargs, **kwargs)
