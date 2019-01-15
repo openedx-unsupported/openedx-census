@@ -19,6 +19,7 @@ class SmartSession:
         self.timeout = timeout
         self.kwargs = kwargs
         self.session = aiohttp.ClientSession(headers=headers or {}, raise_for_status=True)
+        self.headers = {}
         self.save = save
         self.saver = saver
 
@@ -46,7 +47,6 @@ class SmartSession:
                     raise HttpError(f"{code} {method} {url}")
 
     async def text_from_url(self, url, came_from=None, method='get', data=None, save=False):
-        headers = {}
         if came_from:
             async with self.request(came_from) as resp:
                 real_url = str(resp.url)
@@ -55,11 +55,11 @@ class SmartSession:
                 self.saver(url, from_text, resp)
             cookies = self.session.cookie_jar.filter_cookies(url)
             if 'csrftoken' in cookies:
-                headers['X-CSRFToken'] = cookies['csrftoken'].value
+                self.headers['X-CSRFToken'] = cookies['csrftoken'].value
 
-            headers['Referer'] = real_url
+            self.headers['Referer'] = real_url
 
-        async with self.request(url, method, headers=headers, data=data) as response:
+        async with self.request(url, method, headers=self.headers, data=data) as response:
             try:
                 text = await response.read()
             except aiohttp.ClientError as exc:
