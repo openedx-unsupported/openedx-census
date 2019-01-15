@@ -129,10 +129,10 @@ def courses_and_orgs(sites):
             all_course_ids.add(course_id)
             try:
                 key = opaque_keys.edx.keys.CourseKey.from_string(course_id)
+                all_orgs[key.org].add(site)
             except opaque_keys.InvalidKeyError:
                 course = course_id
             else:
                 course = f"{key.org}+{key.course}"
             all_courses[course].add(site)
-            all_orgs[key.org].add(site)
     return all_courses, all_orgs, all_course_ids
