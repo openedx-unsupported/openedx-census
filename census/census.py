@@ -136,9 +136,10 @@ def cli():
 @click.option('--min', type=int, default=0)
 @click.option('--gone', is_flag=True)
 @click.option('--site', is_flag=True)
+@click.option('--summarize', is_flag=True)
 @click.option('--out', 'out_file', type=click.File('wb'), default=SITES_PICKLE)
 @click.argument('site_patterns', nargs=-1)
-def scrape(log_level, min, gone, site, out_file, site_patterns):
+def scrape(log_level, min, gone, site, summarize, out_file, site_patterns):
     """Visit sites and count their courses."""
     logging.basicConfig(level=log_level.upper())
     if site:
@@ -161,7 +162,7 @@ def scrape(log_level, min, gone, site, out_file, site_patterns):
     # SCRAPE!
     scrape_sites(sites)
 
-    if site:
+    if summarize:
         show_text_report(sites)
     else:
         with out_file:
