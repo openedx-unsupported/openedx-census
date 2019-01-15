@@ -1,6 +1,7 @@
 """Parsers for specific sites."""
 
 import datetime
+import itertools
 import json
 import re
 import urllib.parse
@@ -292,25 +293,33 @@ async def edx_search_post(site, session):
     # Note: the URL says course_discovery, but this is not the Course Discovery
     # app, it routes through to edx-search.
     url = urllib.parse.urljoin(real_url, '/search/course_discovery/')
-    search_params = {'exclude_ended_courses': 'true', 'only_can_enroll_courses': 'false'}
-    text = await session.text_from_url(url, came_from=url0, method='post', data=search_params)
-    try:
-        data = json.loads(text)
-    except Exception:
-        raise Exception(f"Couldn't parse result from json: {text[:100]!r}")
-    count = data["total"]
-    if count == 0:
-        raise GotZero("data[total] is zero")
-    try:
-        for course in data["results"]:
-            site.course_ids[course["_id"]] += 1
-    except Exception:
-        pass
-    # The JSON has a "took" key, the time to respond, which we don't
-    # want in the fingerprint.
-    canon = dict(data)
-    del canon['took']
-    site.add_to_fingerprint(json.dumps(canon, sort_keys=True).encode('utf8'))
+    search_params = {
+        'exclude_ended_courses': 'true',
+        'only_can_enroll_courses': 'false',
+        'page_size': 100,
+        }
+    for search_params['page_index'] in itertools.count():
+        text = await session.text_from_url(url, came_from=url0, method='post', data=search_params)
+        try:
+            data = json.loads(text)
+        except Exception:
+            raise Exception(f"Couldn't parse result from json: {text[:100]!r}")
+        count = data["total"]
+        if count == 0:
+            raise GotZero("data[total] is zero")
+        if not data["results"]:
+            # We've paginated through all the results.
+            break
+        try:
+            for course in data["results"]:
+                site.course_ids[course["_id"]] += 1
+        except Exception:
+            pass
+        # The JSON has a "took" key, the time to respond, which we don't
+        # want in the fingerprint.
+        del data['took']
+        site.add_to_fingerprint(json.dumps(data, sort_keys=True).encode('utf8'))
+        url0 = None
     return count
 
 @matches_any
