@@ -97,5 +97,4 @@ class SessionFactory:
         self.session_kwargs = kwargs
 
     def new(self, **kwargs):
-        save = bool(int(os.environ.get('SAVE', 0)))
-        return SmartSession(self.sem, save=save, saver=Saver().save, **self.session_kwargs, **kwargs)
+        return SmartSession(self.sem, saver=Saver().save, **self.session_kwargs, **kwargs)

@@ -105,8 +105,10 @@ async def parse_site(site, session_factory):
             site.time = time.time() - start
             return char
 
-async def run(sites):
-    factory = SessionFactory(max_requests=MAX_REQUESTS, timeout=TIMEOUT, headers=HEADERS)
+async def run(sites, session_kwargs):
+    kwargs = dict(max_requests=MAX_REQUESTS, timeout=TIMEOUT, headers=HEADERS)
+    kwargs.update(session_kwargs)
+    factory = SessionFactory(**kwargs)
     tasks = [asyncio.ensure_future(parse_site(site, factory)) for site in sites]
     chars = collections.Counter()
     progress = tqdm.tqdm(asyncio.as_completed(tasks), total=len(tasks))
@@ -117,10 +119,10 @@ async def run(sites):
         progress.set_description(desc)
     print()
 
-def scrape_sites(sites):
+def scrape_sites(sites, session_kwargs):
     try:
         loop = asyncio.get_event_loop()
-        future = asyncio.ensure_future(run(sites))
+        future = asyncio.ensure_future(run(sites, session_kwargs))
         # Some exceptions go to stderr and then to my except clause? Shut up.
         loop.set_exception_handler(lambda loop, context: None)
         loop.run_until_complete(future)
@@ -137,9 +139,10 @@ def cli():
 @click.option('--gone', is_flag=True)
 @click.option('--site', is_flag=True)
 @click.option('--summarize', is_flag=True)
+@click.option('--save', is_flag=True)
 @click.option('--out', 'out_file', type=click.File('wb'), default=SITES_PICKLE)
 @click.argument('site_patterns', nargs=-1)
-def scrape(log_level, min, gone, site, summarize, out_file, site_patterns):
+def scrape(log_level, min, gone, site, summarize, save, out_file, site_patterns):
     """Visit sites and count their courses."""
     logging.basicConfig(level=log_level.upper())
     if site:
@@ -160,7 +163,10 @@ def scrape(log_level, min, gone, site, summarize, out_file, site_patterns):
         print(f"{len(sites)} sites")
 
     # SCRAPE!
-    scrape_sites(sites)
+    session_kwargs = {}
+    if save:
+        session_kwargs['save'] = True
+    scrape_sites(sites, session_kwargs)
 
     if summarize:
         show_text_report(sites)
