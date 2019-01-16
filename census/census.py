@@ -22,7 +22,7 @@ from census.helpers import ScrapeFail, domain_from_url
 from census.html_report import html_report
 from census.keys import username, password
 from census.session import SessionFactory
-from census.sites import Site, HashedSite, read_sites_csv, courses_and_orgs, totals, read_sites_flat
+from census.sites import Site, HashedSite, read_sites_csv, courses_and_orgs, totals, read_sites_flat, overcount
 from census.site_patterns import find_site_functions
 
 # We don't use anything from this module, it just registers all the parsers.
@@ -324,7 +324,7 @@ def json_update(sites, all_courses, include_overcount=False):
     data['sites'] = site_updates
 
     if include_overcount:
-        data['overcount'] = sum(len(s) - 1 for s in all_courses.values())
+        data['overcount'] = overcount(all_courses)
 
     with open(UPDATE_JSON, "w") as update_json:
         json.dump(data, update_json, indent=4)

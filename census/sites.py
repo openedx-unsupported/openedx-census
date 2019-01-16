@@ -153,3 +153,48 @@ def courses_and_orgs(sites):
                 course = f"{key.org}+{key.course}"
             all_courses[course].add(site)
     return all_courses, all_orgs, all_course_ids
+
+
+SYNDICATORS = ['Microsoft', 'BigDataUniversity']
+
+def overcount(all_courses):
+    """Compute the number of duplicate courses.
+
+    This is recorded as the "overcount": how much to subtract from the sum of
+    the number of courses for each site, to get the total number of courses.
+
+    `all_courses` is a dict mapping course_ids to a set of sites running that
+    course.
+
+    Returns: an integer, the overcount.
+    """
+    # If a course is run by 5 sites, then 4 go into the overcount.
+    true_dups = sum(len(s) - 1 for s in all_courses.values())
+
+    # A trickier case: some sites re-label courses with a new organization.
+    # This happens with Microsoft courses a lot.
+    reorged = 0
+    org_courses = [tuple(id.split("+")) for id in all_courses.keys()]
+    org_courses = [t for t in org_courses if len(t) == 2]
+    for syn_org in SYNDICATORS:
+        syn_courses = {
+            course for org, course in org_courses
+            if org == syn_org and len(course) > 3 and course[0].isalpha()
+            }
+        other_orgs = collections.defaultdict(set)
+        for org, course in org_courses:
+            if org == syn_org:
+                continue
+            if course in syn_courses:
+                other_orgs[org].add(course)
+
+        # orgs maps organizations onto a set of the syndicator's course ids
+        # they run.  Just a course id isn't unique enough ("CS100"), so we
+        # look for orgs with 3 or more of those course ids.
+        for org, courses in other_orgs.items():
+            if len(courses) < 3:
+                continue
+            #print(f"Org {org} has {len(courses)} in common with {syn_org}")
+            reorged += len(courses)
+
+    return true_dups + reorged
