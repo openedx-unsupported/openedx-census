@@ -31,7 +31,6 @@ setup(
         'click',
         'cssselect',
         'parse',
-        'pytest',
         'requests',
         'tqdm',
     ],

@@ -1,0 +1,2 @@
+pytest
+edx-lint
