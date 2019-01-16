@@ -31,9 +31,9 @@ from census import parsers
 
 STATS_SITE = "http://openedxstats.herokuapp.com"
 UPDATE_JSON = "update.json"
-SITES_CSV = "sites.csv"
-SITES_PICKLE = "sites.pickle"
-
+SITES_CSV = "refs/sites.csv"
+SITES_PICKLE = "state/sites.pickle"
+ALIASES_TXT = "refs/aliases.txt"
 
 MAX_REQUESTS = 50
 TIMEOUT = 30
@@ -224,7 +224,7 @@ def summarize(sites):
 @cli.command()
 @click.option('--in', 'in_file', type=click.File('rb'), default=SITES_PICKLE,
               help='The sites.pickle file to read')
-@click.option('--out', 'out_file', type=click.File('w'), default="sites.html",
+@click.option('--out', 'out_file', type=click.File('w'), default="html/sites.html",
               help='The HTML file to write')
 @click.option('--skip-none', is_flag=True, help="Don't include sites with no count")
 @click.option('--only-new', is_flag=True, help="Only include sites we think are new")
@@ -244,7 +244,7 @@ def html(in_file, out_file, skip_none, only_new):
         f.write("".join(i + "\n" for i in sorted(all_course_ids)))
 
     known_domains = {domain_from_url(site.url) for site in read_sites_csv(SITES_CSV)}
-    with open("aliases.txt") as aliases:
+    with open(ALIASES_TXT) as aliases:
         known_domains.update(domain_from_url(line.strip()) for line in aliases)
 
     sites = sorted(sites, key=lambda s: s.url.split(".")[::-1])
@@ -267,7 +267,7 @@ def write_json(in_file):
 
 @cli.command()
 @click.option('--log', 'log_level', type=str, default='info')
-@click.option('--out', 'out_file', type=click.File('wb'), default='refsites.pickle')
+@click.option('--out', 'out_file', type=click.File('wb'), default='state/refsites.pickle')
 @click.argument('referrer_sites', nargs=1)
 def refscrape(log_level, out_file, referrer_sites):
     """Visit sites and count their courses."""
