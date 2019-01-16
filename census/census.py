@@ -305,6 +305,12 @@ def show_text_report(sites):
             print(f"    {strategy}: {line}")
 
 def json_update(sites, all_courses, include_overcount=False):
+    """Write a JSON file for uploading to the stats site.
+
+    `all_courses` is a dict mapping course_ids to a set of sites running that
+    course.
+
+    """
     data = {}
 
     site_updates = {

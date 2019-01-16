@@ -11,18 +11,22 @@ from census.helpers import (
 
 @attr.s(cmp=False, frozen=False)
 class Site:
-    # Stuff from the csv:
-    url = attr.ib()
-    latest_courses = attr.ib()
-    is_gone = attr.ib()
+    ## Stuff from the known sites csv:
+    url = attr.ib(type=str)
+    latest_courses = attr.ib(type=int)
+    is_gone = attr.ib(type=bool)
 
-    # Stuff that we scrape:
+    ## Stuff that we scrape:
     current_courses = attr.ib(default=None)
     is_gone_now = attr.ib(default=False)
-    course_ids = attr.ib(default=attr.Factory(collections.Counter))
-    tried = attr.ib(default=attr.Factory(list))
-    ssl_err = False
-    custom_parser_err = False
+
+    # Maps course-ids to number of instances of the course
+    course_ids = attr.ib(factory=collections.Counter)
+
+    # List of (strategy, traceback-string-or-none)
+    tried = attr.ib(factory=list)
+    ssl_err = attr.ib(default=False)
+    custom_parser_err = attr.ib(default=False)
     time = attr.ib(default=None)
     fingerprint = attr.ib(default="")
     version = attr.ib(default=None)
@@ -121,6 +125,19 @@ def totals(sites):
     return old, new
 
 def courses_and_orgs(sites):
+    """Collate courses, orgs, and course ids from scraped sites.
+
+    Returns three values:
+
+        - all_courses is a dict mapping course_ids to a set of sites running that
+          course.
+
+        - all_orgs is a dict mapping organization ids to a set of sites running
+          courses in that organization.
+
+        - all_course_ids is a set of all course ids.
+
+    """
     all_courses = collections.defaultdict(set)
     all_orgs = collections.defaultdict(set)
     all_course_ids = set()
