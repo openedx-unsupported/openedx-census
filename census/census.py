@@ -276,7 +276,7 @@ def refscrape(log_level, out_file, referrer_sites):
     print(f"{len(sites)} sites")
 
     # SCRAPE!
-    scrape_sites(sites)
+    scrape_sites(sites, {})
 
     with out_file:
         pickle.dump(sites, out_file)
