@@ -2,7 +2,7 @@
 sites.csv
 sites.html
 refsites.html
-save_*.*
+save/
 *.pickle
 course-ids.txt
 update.json
@@ -11,7 +11,7 @@ census/keys.py
 .pytest_cache
 aliases.txt
 referers.txt
-referers_*.txt
+history/
 *.egg-info
 new-referers.txt
 new-referrers.html
