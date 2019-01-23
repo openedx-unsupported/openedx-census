@@ -13,8 +13,8 @@ Requires Python 3.6 (or greater).
 
 - Scraping all referrers::
 
-  $ make get_referers get_known all_sites
-  $ open html/refsites.html         # to see the results
+  $ make get_referers get_known all_refs
+  $ open html/all-refs.html         # to see the results
 
 - Scraping all known sites::
 

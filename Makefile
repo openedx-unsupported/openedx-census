@@ -13,6 +13,10 @@ install:			## install this project to run it
 	pip install -e .
 	mkdir -p refs state html
 
+clean:				## remove all transient files
+	rm refs/*.* state/*.* html/*.* course-ids.txt update.json
+	rm -rf save
+
 ## Data management
 
 # Where Ned kept it
@@ -36,16 +40,16 @@ get_known:			## pull down the csv of known sites
 
 .PHONY: new_sites all_sites known_sites post
 
-new_sites:			## scrape new referrers in the last month
+new_refs:			## scrape new referrers in the last month
 	@# Sorry for the shell craziness!
 	@# date -v-1m    gives us the date of a month ago, so we can see the new referrers in the last month.
-	comm -13 refs/history/$$(ls -1 refs/history | awk '{if ($$0 < "referers_'$$(date -v-1m '+%Y%m%d')'.txt") print}' | tail -1) refs/referers.txt > refs/new-referers.txt
-	census refscrape --out state/new-refsites.pickle refs/new-referers.txt
-	census html --in state/new-refsites.pickle --out html/new-referrers.html --skip-none --only-new
+	comm -13 refs/history/$$(ls -1 refs/history | awk '{if ($$0 < "referers_'$$(date -v-1m '+%Y%m%d')'.txt") print}' | tail -1) refs/referers.txt > refs/new-refs.txt
+	census refscrape --out state/new-refs.pickle refs/new-refs.txt
+	census html --in state/new-refs.pickle --out html/new-refs.html --skip-none --only-new
 
-all_sites:			## scrape all referrers ever
-	census refscrape --out state/refsites.pickle refs/referers.txt
-	census html --in state/refsites.pickle --out html/refsites.html --skip-none --only-new
+all_refs:			## scrape all referrers ever
+	census refscrape --out state/all-refs.pickle refs/referers.txt
+	census html --in state/all-refs.pickle --out html/all-refs.html --skip-none --only-new
 
 known_sites:			## scrape the known sites
 	census scrape --gone && census summary && census html && census json
