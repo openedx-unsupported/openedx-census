@@ -111,7 +111,7 @@ async def run(sites, session_kwargs):
     factory = SessionFactory(**kwargs)
     tasks = [asyncio.ensure_future(parse_site(site, factory)) for site in sites]
     chars = collections.Counter()
-    progress = tqdm.tqdm(asyncio.as_completed(tasks), total=len(tasks))
+    progress = tqdm.tqdm(asyncio.as_completed(tasks), total=len(tasks), smoothing=0.0)
     for completed in progress:
         char = await completed
         chars[char] += 1
