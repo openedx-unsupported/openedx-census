@@ -21,7 +21,7 @@ OPENEDX_STATS_DIR = /src/edx/src/openedxstats
 .PHONY: save_referer_history fetch_referrer_logs get_referers get_known
 
 save_referer_history:		## save current referers in the history directory
-	mv -n refs/referers.txt "refs/history/referers_$(date -r refs/referers.txt +"%Y%m%d").txt"
+	mv -n refs/referers.txt "refs/history/referers_$$(date -r refs/referers.txt +"%Y%m%d").txt"
 
 fetch_referer_logs:		## use openedxstats to get the latest referer logs
 	cd $(OPENEDX_STATS_DIR) && heroku run python manage.py fetch_referrer_logs
