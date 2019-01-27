@@ -117,6 +117,7 @@ async def run(sites, session_kwargs):
         chars[char] += 1
         desc = " ".join(f"{c}{v}" for c, v in sorted(chars.items()))
         progress.set_description(desc)
+    progress.close()
     print()
 
 def scrape_sites(sites, session_kwargs):
