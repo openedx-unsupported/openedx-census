@@ -11,15 +11,24 @@ Requires Python 3.6 (or greater).
 
   $ make install
 
+- Get referrer data::
+
+  $ make fetch_referer_logs save_referer_history get_referers
+
 - Scraping all referrers::
 
-  $ make get_referers get_known all_refs
-  $ open html/all-refs.html         # to see the results
+  $ make get_known all_refs
+  $ open html/all-refs.html
+
+- Scraping new (last 2 months) referrers::
+
+  $ make get_known new_refs
+  $ open html/new-refs.html
 
 - Scraping all known sites::
 
   $ make get_known known_sites
-  $ open html/sites.html            # to see the results
+  $ open html/sites.html
 
 - After scraping known sites, updating the database::
 
