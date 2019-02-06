@@ -269,15 +269,19 @@ def write_json(in_file):
 @cli.command()
 @click.option('--log', 'log_level', type=str, default='info')
 @click.option('--out', 'out_file', type=click.File('wb'), default='state/refsites.pickle')
+@click.option('--save', is_flag=True)
 @click.argument('referrer_sites', nargs=1)
-def refscrape(log_level, out_file, referrer_sites):
+def refscrape(log_level, out_file, save, referrer_sites):
     """Visit sites and count their courses."""
     logging.basicConfig(level=log_level.upper())
     sites = read_sites_flat(referrer_sites)
     print(f"{len(sites)} sites")
 
     # SCRAPE!
-    scrape_sites(sites, {})
+    session_kwargs = {}
+    if save:
+        session_kwargs['save'] = True
+    scrape_sites(sites, session_kwargs)
 
     with out_file:
         pickle.dump(sites, out_file)
