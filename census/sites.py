@@ -54,7 +54,9 @@ class Site:
 
     # Regex replacements to remove noise from fingerprints.
     REMOVABLE_NOISE = [
-        (r'<script type="[0-9a-fA-F]+-text/javascript"', r'<script type="XXX-text/javascript"'),
+        (rb'<script type="[0-9a-fA-F]+-text/javascript"', rb'<script type="XXX-text/javascript"'),
+        # <script src="https://ajax.cloudflare.com/cdn-cgi/scripts/cb7744ae/cloudflare-static/rocket-loader.min.js" data-cf-settings="4d25b03f3332116d5fb64ead-|49" defer="">
+        (rb' data-cf-settings="[0-9a-fA-F]+-\|', rb' data-cf-settings="XXX-\|'),
     ]
 
     def add_to_fingerprint(self, text):
