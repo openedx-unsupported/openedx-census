@@ -76,13 +76,14 @@ class SmartSession:
 
 
 class Saver:
+    numbers = itertools.count()
+
     def __init__(self, dir="save"):
-        self.save_numbers = itertools.count()
         self.dir = dir
 
     def save(self, url, text, response):
         os.makedirs(self.dir, exist_ok=True)
-        num = next(self.save_numbers)
+        num = next(self.numbers)
         ext = re.split(r"[+/]", response.content_type)[-1]
         save_name = f"{num:03d}.{ext}"
         with open(os.path.join(self.dir, "index.txt"), "a") as idx:
