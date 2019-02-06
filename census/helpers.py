@@ -61,6 +61,7 @@ def parse_text(pattern, text):
     return result
 
 def fingerprint(text):
+    """Return a hex string that fingerprints `text`."""
     return hashlib.sha1(text).hexdigest()
 
 def domain_from_url(url):

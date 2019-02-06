@@ -1,5 +1,6 @@
 import collections
 import csv
+import re
 
 import attr
 import opaque_keys
@@ -45,15 +46,23 @@ class Site:
     def from_url(cls, url):
         return cls(clean_url(url), latest_courses=0, is_gone=False)
 
+    # Ignore any line containing these strings.
     IGNORE_LINE_FRAGMENTS = [
         b"window.NREUM||(NREUM={})",
         b"<input type='hidden' name='csrfmiddlewaretoken'",
+    ]
+
+    # Regex replacements to remove noise from fingerprints.
+    REMOVABLE_NOISE = [
+        (r'<script type="[0-9a-fA-F]+-text/javascript"', r'<script type="XXX-text/javascript"'),
     ]
 
     def add_to_fingerprint(self, text):
         # Remove noise from the fingerprint.
         lines = text.splitlines(keepends=True)
         lines = [l for l in lines if not any(frag in l for frag in self.IGNORE_LINE_FRAGMENTS)]
+        for pat, repl in self.REMOVABLE_NOISE:
+            lines = [re.sub(pat, repl, l) for l in lines]
         lines.append(self.fingerprint.encode('ascii'))
         text = b''.join(lines)
         self.fingerprint = fingerprint(text)
