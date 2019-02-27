@@ -58,6 +58,8 @@ CERTIFICATE_MSGS = [
     "CertificateError:",
 ]
 
+log = logging.getLogger(__name__)
+
 async def parse_site(site, session_factory):
     for verify_ssl in [True, False]:
         async with session_factory.new(verify_ssl=verify_ssl) as session:
@@ -92,6 +94,7 @@ async def parse_site(site, session_factory):
                     site.ssl_err = True
                     site.tried = []
                     site.custom_parser_err = False
+                    log.debug("SSL error: %s", (errs,))
                     continue
                 if all(any(msg in err for msg in GONE_MSGS) for err in errs):
                     site.is_gone_now = True
