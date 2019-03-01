@@ -90,9 +90,11 @@ def is_chaff_domain(domain):
 
 SNIPS = [
     ('ginkgo', b'<a class="nav-skip sr-only sr-only-focusable" href="#main">'),
-    ('euc-fic', b'<a class="nav-skip" href="#main">'),
+    ('ficus', b'DateUtilFactory.transform(iterationKey=".localized_datetime");'),
+    ('eucalytpus', b'<a class="nav-skip" href="#main">'),
     ('dogwood', b'<a class="nav-skip" href="#content">'),
     ('cypress', b'<script type="text/javascript" src="/jsi18n/"></script>'),
+    ('birch', b'<header class="global '),
 ]
 
 def sniff_version(text):
