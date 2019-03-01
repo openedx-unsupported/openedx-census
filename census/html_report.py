@@ -96,44 +96,50 @@ def html_report(out_file, sites, old, new, all_courses=None, all_orgs=None, know
             writer.end_section()
         writer.end_section()
 
-    hashed_sites = collections.defaultdict(HashedSite)
-    versions = collections.defaultdict(list)
+    hashed_sites_by_fp = collections.defaultdict(HashedSite)
     for site in sites:
-        hashed_site = hashed_sites[site.fingerprint]
+        hashed_site = hashed_sites_by_fp[site.fingerprint]
         hashed_site.fingerprint = site.fingerprint
         hashed_site.version = site.version
         hashed_site.sites.append(site)
-        if len(hashed_site.sites) == 1:
-            # Only add each hashed site to the versions once.
-            versions[site.version or "none"].append(hashed_site)
+
+    hashed_sites = list(hashed_sites_by_fp.values())
+    new_hashed_sites = []
+    for hashed_site in hashed_sites:
+        if hashed_site.all_chaff():
+            hashed_site.is_new = False
+        else:
+            hashed_site.is_new = not hashed_site.any_known(known_domains)
+        if hashed_site.is_new:
+            new_hashed_sites.append(hashed_site)
+    if only_new:
+        hashed_sites = new_hashed_sites
+
+    versions = collections.defaultdict(list)
+    for hashed_site in hashed_sites:
+        versions[hashed_site.version or "none"].append(hashed_site)
 
     writer.start_section(f"<p>Versions</p>")
     for version in sorted(versions.keys()):
         hsites = versions[version]
         writer.start_section(f"<p>{version}: {len(hsites)}</p>")
         for hashed_site in hsites:
-            write_hashed_site(hashed_site, writer, only_new, known_domains)
+            write_hashed_site(hashed_site, writer, known_domains)
         writer.end_section()
     writer.end_section()
 
     writer.start_section(f"<p>Hashed: {len(hashed_sites)}</p>")
-    hashed_sites = sorted(hashed_sites.values(), key=lambda hs: hs.current_courses() or 0, reverse=True)
+    hashed_sites = sorted(hashed_sites, key=lambda hs: hs.current_courses() or 0, reverse=True)
     for hashed_site in hashed_sites:
-        write_hashed_site(hashed_site, writer, only_new, known_domains)
+        write_hashed_site(hashed_site, writer, known_domains)
     writer.end_section()
 
 
-def write_hashed_site(hashed_site, writer, only_new, known_domains):
+def write_hashed_site(hashed_site, writer, known_domains):
     tags = Tags()
-    is_new = False
     if hashed_site.all_chaff():
         tags.add("Chaff")
-    else:
-        is_new = not hashed_site.any_known(known_domains)
-    if only_new and not is_new:
-        return
-
-    if is_new:
+    if hashed_site.is_new:
         tags.add("New")
     if hashed_site.all_ssl_err():
         tags.add("SSL")

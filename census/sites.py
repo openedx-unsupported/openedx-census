@@ -103,6 +103,7 @@ class HashedSite:
     fingerprint = attr.ib(default=None)
     sites = attr.ib(default=attr.Factory(list))
     version = attr.ib(default=None)
+    is_new = attr.ib(default=False)
 
     def current_courses(self):
         return self.sites[0].current_courses
