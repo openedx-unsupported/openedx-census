@@ -102,6 +102,7 @@ class Site:
 class HashedSite:
     fingerprint = attr.ib(default=None)
     sites = attr.ib(default=attr.Factory(list))
+    version = attr.ib(default=None)
 
     def current_courses(self):
         return self.sites[0].current_courses
@@ -111,6 +112,9 @@ class HashedSite:
 
     def any_known(self, known_domains):
         return any(is_known(site, known_domains) for site in self.sites)
+
+    def all_ssl_err(self):
+        return all(site.ssl_err for site in self.sites)
 
     def best_url(self):
         non_chaff = [site for site in self.sites if not is_chaff_domain(site.url)]

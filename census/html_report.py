@@ -97,40 +97,57 @@ def html_report(out_file, sites, old, new, all_courses=None, all_orgs=None, know
         writer.end_section()
 
     hashed_sites = collections.defaultdict(HashedSite)
+    versions = collections.defaultdict(list)
     for site in sites:
         hashed_site = hashed_sites[site.fingerprint]
         hashed_site.fingerprint = site.fingerprint
+        hashed_site.version = site.version
         hashed_site.sites.append(site)
+        if len(hashed_site.sites) == 1:
+            # Only add each hashed site to the versions once.
+            versions[site.version or "none"].append(hashed_site)
 
-    writer.start_section(f"<p>Hashed: {len(hashed_sites)}</p>")
-    hashed_sites = sorted(hashed_sites.items(), key=lambda kv: kv[1].current_courses() or 0, reverse=True)
-    for fp, hashed_site in hashed_sites:
-        tags = Tags()
-        is_new = False
-        if hashed_site.all_chaff():
-            tags.add("Chaff")
-        else:
-            is_new = not hashed_site.any_known(known_domains)
-        if only_new and not is_new:
-            continue
-        if is_new:
-            tags.add("New")
-        if all(site.ssl_err for site in hashed_site.sites):
-            tags.add("SSL")
-        url = hashed_site.best_url()
-        ncourses = hashed_site.current_courses()
-        nsites = len(hashed_site.sites)
-        writer.start_section(
-            f"<a class='url' href='{url}'>{url}</a>&nbsp; "
-            #f"<span class='hash'>{fp[:10]}</span>&nbsp; "
-            f"<b>{ncourses}</b> {pluralize(ncourses, 'course')}, "
-            f"{nsites} {pluralize(nsites, 'site')} {tags.html()}"
-        )
-        for site in hashed_site.sites:
-            write_site(site, writer, known_domains)
+    writer.start_section(f"<p>Versions</p>")
+    for version in sorted(versions.keys()):
+        hsites = versions[version]
+        writer.start_section(f"<p>{version}: {len(hsites)}</p>")
+        for hashed_site in hsites:
+            write_hashed_site(hashed_site, writer, only_new, known_domains)
         writer.end_section()
     writer.end_section()
 
+    writer.start_section(f"<p>Hashed: {len(hashed_sites)}</p>")
+    hashed_sites = sorted(hashed_sites.values(), key=lambda hs: hs.current_courses() or 0, reverse=True)
+    for hashed_site in hashed_sites:
+        write_hashed_site(hashed_site, writer, only_new, known_domains)
+    writer.end_section()
+
+
+def write_hashed_site(hashed_site, writer, only_new, known_domains):
+    tags = Tags()
+    is_new = False
+    if hashed_site.all_chaff():
+        tags.add("Chaff")
+    else:
+        is_new = not hashed_site.any_known(known_domains)
+    if only_new and not is_new:
+        return
+
+    if is_new:
+        tags.add("New")
+    if hashed_site.all_ssl_err():
+        tags.add("SSL")
+    url = hashed_site.best_url()
+    ncourses = hashed_site.current_courses()
+    nsites = len(hashed_site.sites)
+    writer.start_section(
+        f"<a class='url' href='{url}'>{url}</a>&nbsp; "
+        f"<b>{ncourses}</b> {pluralize(ncourses, 'course')}, "
+        f"{nsites} {pluralize(nsites, 'site')} {tags.html()}"
+    )
+    for site in hashed_site.sites:
+        write_site(site, writer, known_domains)
+    writer.end_section()
 
 def write_site(site, writer, known_domains):
     old, new = site.latest_courses, site.current_courses
