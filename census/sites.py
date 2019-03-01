@@ -77,7 +77,9 @@ class Site:
         lines.append(self.fingerprint.encode('ascii'))
         text = b''.join(lines)
         self.fingerprint = fingerprint(text)
-        self.version = sniff_version(text)
+        version = sniff_version(text)
+        if version:
+            self.version = version
 
     def should_update(self):
         """Should we update this site in the database?"""
