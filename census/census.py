@@ -60,6 +60,11 @@ CERTIFICATE_MSGS = [
 
 log = logging.getLogger(__name__)
 
+def all_have_snippets(errors, snippets):
+    """Do all of the errors match one of the snippets?"""
+    return all(any(snip in err for snip in snippets) for err in errors)
+
+
 async def parse_site(site, session_factory):
     for verify_ssl in [True, False]:
         async with session_factory.new(verify_ssl=verify_ssl) as session:
@@ -84,6 +89,7 @@ async def parse_site(site, session_factory):
                     errs.append(err)
                     if custom_parser:
                         site.custom_parser_err = True
+
             if success:
                 site.current_courses = max(attempt.courses for attempt in site.tried if attempt.courses is not None)
                 if site.is_gone:
@@ -96,13 +102,13 @@ async def parse_site(site, session_factory):
                     else:
                         char = '+'
             else:
-                if verify_ssl and all(any(msg in err for msg in CERTIFICATE_MSGS) for err in errs):
+                if verify_ssl and all_have_snippets(errs, CERTIFICATE_MSGS):
                     site.ssl_err = True
                     site.tried = []
                     site.custom_parser_err = False
                     log.debug("SSL error: %s", (errs,))
                     continue
-                if all(any(msg in err for msg in GONE_MSGS) for err in errs):
+                if all_have_snippets(errs, GONE_MSGS):
                     site.is_gone_now = True
                     if site.is_gone:
                         char = 'X'
