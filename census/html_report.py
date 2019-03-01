@@ -162,7 +162,9 @@ def write_site(site, writer, known_domains):
     #if site.time > 5:
     #    tags.add(f"{site.time:.1f}s", "slow")
     writer.start_section(f"<a class='url' href='{site.url}'>{site.url}</a>: {old}{new_text} {tags.html()}")
-    for strategy, tb in site.tried:
+    for attempt in site.tried:
+        strategy = attempt.strategy
+        tb = attempt.error
         if tb is not None:
             lines = tb.splitlines()
             if len(lines) > 1:
@@ -175,7 +177,7 @@ def write_site(site, writer, known_domains):
             else:
                 writer.write(f"<p>{strategy}: {lines[0]}")
         else:
-            writer.write(f"<p>{strategy}: worked</p>")
+            writer.write(f"<p>{strategy}: counted {attempt.courses} courses</p>")
     writer.end_section()
 
 

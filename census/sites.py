@@ -10,6 +10,14 @@ from census.helpers import (
     domain_from_url, is_chaff_domain, is_known, fingerprint, sniff_version
 )
 
+@attr.s
+class Attempt:
+    """A use of a strategy on a site."""
+    strategy = attr.ib(default="")
+    courses = attr.ib(default=None)
+    error = attr.ib(default=None)
+
+
 @attr.s(cmp=False, frozen=False)
 class Site:
     ## Stuff from the known sites csv:
@@ -24,8 +32,9 @@ class Site:
     # Maps course-ids to number of instances of the course
     course_ids = attr.ib(factory=collections.Counter)
 
-    # List of (strategy, traceback-string-or-none)
+    # List of Attempt's
     tried = attr.ib(factory=list)
+
     ssl_err = attr.ib(default=False)
     custom_parser_err = attr.ib(default=False)
     time = attr.ib(default=None)

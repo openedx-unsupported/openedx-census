@@ -22,7 +22,7 @@ from census.helpers import ScrapeFail, domain_from_url
 from census.html_report import html_report
 from census.keys import username, password
 from census.session import SessionFactory
-from census.sites import Site, HashedSite, read_sites_csv, courses_and_orgs, totals, read_sites_flat, overcount
+from census.sites import Attempt, Site, HashedSite, read_sites_csv, courses_and_orgs, totals, read_sites_flat, overcount
 from census.site_patterns import find_site_functions
 
 # We don't use anything from this module, it just registers all the parsers.
@@ -65,30 +65,36 @@ async def parse_site(site, session_factory):
         async with session_factory.new(verify_ssl=verify_ssl) as session:
             start = time.time()
             errs = []
+            success = False
             for parser, args, kwargs, custom_parser in find_site_functions(site.url):
+                attempt = Attempt(parser.__name__)
+                err = None
                 try:
-                    site.current_courses = await parser(site, session, *args, **kwargs)
+                    attempt.courses = await parser(site, session, *args, **kwargs)
                 except ScrapeFail as exc:
-                    site.tried.append((parser.__name__, f"{exc.__class__.__name__}: {exc}"))
+                    attempt.error = f"{exc.__class__.__name__}: {exc}"
                     err = str(exc) or exc.__class__.__name__
                 except Exception as exc:
-                    site.tried.append((parser.__name__, traceback.format_exc()))
+                    attempt.error = traceback.format_exc()
                     err = str(exc) or exc.__class__.__name__
                 else:
-                    site.tried.append((parser.__name__, None))
-                    if site.is_gone:
-                        char = 'B'
+                    success = True
+                site.tried.append(attempt)
+                if err:
+                    errs.append(err)
+                    if custom_parser:
+                        site.custom_parser_err = True
+            if success:
+                site.current_courses = max(attempt.courses for attempt in site.tried if attempt.courses is not None)
+                if site.is_gone:
+                    char = 'B'
+                else:
+                    if site.current_courses == site.latest_courses:
+                        char = '='
+                    elif site.current_courses < site.latest_courses:
+                        char = '-'
                     else:
-                        if site.current_courses == site.latest_courses:
-                            char = '='
-                        elif site.current_courses < site.latest_courses:
-                            char = '-'
-                        else:
-                            char = '+'
-                    break
-                errs.append(err)
-                if custom_parser:
-                    site.custom_parser_err = True
+                        char = '+'
             else:
                 if verify_ssl and all(any(msg in err for msg in CERTIFICATE_MSGS) for err in errs):
                     site.ssl_err = True
@@ -305,12 +311,12 @@ def show_text_report(sites):
     print(f"Found courses went from {old} to {new}")
     for site in sites:
         print(f"{site.url}: {site.latest_courses} --> {site.current_courses} ({site.fingerprint})")
-        for strategy, tb in site.tried:
-            if tb is not None:
-                line = tb.splitlines()[-1]
+        for attempt in site.tried:
+            if attempt.error is not None:
+                line = attempt.error.splitlines()[-1]
             else:
-                line = "Worked"
-            print(f"    {strategy}: {line}")
+                line = f"Counted {attempt.courses} courses"
+            print(f"    {attempt.strategy}: {line}")
 
 def json_update(sites, all_courses, include_overcount=False):
     """Write a JSON file for uploading to the stats site.
