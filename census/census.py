@@ -150,6 +150,7 @@ def cli():
     pass
 
 @cli.command()
+@click.option('--in', 'in_file', type=click.Path(exists=True), help="File of sites to scrape")
 @click.option('--log', 'log_level', type=str, default='info')
 @click.option('--min', type=int, default=0)
 @click.option('--gone', is_flag=True)
@@ -158,7 +159,7 @@ def cli():
 @click.option('--save', is_flag=True)
 @click.option('--out', 'out_file', type=click.File('wb'), default=SITES_PICKLE)
 @click.argument('site_patterns', nargs=-1)
-def scrape(log_level, min, gone, site, summarize, save, out_file, site_patterns):
+def scrape(in_file, log_level, min, gone, site, summarize, save, out_file, site_patterns):
     """Visit sites and count their courses."""
     logging.basicConfig(level=log_level.upper())
     if site:
@@ -166,7 +167,11 @@ def scrape(log_level, min, gone, site, summarize, save, out_file, site_patterns)
         sites = [Site.from_url(u) for u in site_patterns]
     else:
         # Make the list of sites we're going to scrape.
-        sites = list(read_sites_csv(SITES_CSV))
+        in_file = in_file or SITES_CSV
+        if in_file.endswith('.csv'):
+            sites = read_sites_csv(in_file)
+        else:
+            sites = read_sites_flat(in_file)
         sites = [s for s in sites if s.latest_courses >= min]
         if site_patterns:
             sites = [s for s in sites if any(re.search(p, s.url) for p in site_patterns)]
@@ -279,27 +284,6 @@ def write_json(in_file):
     sites_descending = sorted(sites, key=lambda s: s.latest_courses, reverse=True)
     all_courses, all_orgs, all_course_ids = courses_and_orgs(sites)
     json_update(sites_descending, all_courses, include_overcount=True)
-
-
-@cli.command()
-@click.option('--log', 'log_level', type=str, default='info')
-@click.option('--out', 'out_file', type=click.File('wb'), default='state/refsites.pickle')
-@click.option('--save', is_flag=True)
-@click.argument('referrer_sites', nargs=1)
-def refscrape(log_level, out_file, save, referrer_sites):
-    """Visit sites and count their courses."""
-    logging.basicConfig(level=log_level.upper())
-    sites = read_sites_flat(referrer_sites)
-    print(f"{len(sites)} sites")
-
-    # SCRAPE!
-    session_kwargs = {}
-    if save:
-        session_kwargs['save'] = True
-    scrape_sites(sites, session_kwargs)
-
-    with out_file:
-        pickle.dump(sites, out_file)
 
 
 @cli.command('text')
