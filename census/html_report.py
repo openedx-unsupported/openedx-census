@@ -116,13 +116,25 @@ def html_report(out_file, sites, old, new, all_courses=None, all_orgs=None, know
         hashed_sites = new_hashed_sites
 
     versions = collections.defaultdict(list)
+    tags = collections.defaultdict(list)
     for hashed_site in hashed_sites:
         versions[hashed_site.version or "none"].append(hashed_site)
+        for tag in hashed_site.tags():
+            tags[tag].append(hashed_site)
 
     writer.start_section(f"<p>Versions</p>")
     for version in sorted(versions.keys()):
         hsites = versions[version]
         writer.start_section(f"<p>{version}: {len(hsites)}</p>")
+        for hashed_site in hsites:
+            write_hashed_site(hashed_site, writer, known_domains)
+        writer.end_section()
+    writer.end_section()
+
+    writer.start_section(f"<p>Tags</p>")
+    for tag in sorted(tags.keys()):
+        hsites = tags[tag]
+        writer.start_section(f"<p>{tag}: {len(hsites)}</p>")
         for hashed_site in hsites:
             write_hashed_site(hashed_site, writer, known_domains)
         writer.end_section()
@@ -184,6 +196,9 @@ def write_site(site, writer, known_domains):
     # Times are not right now that we limit requests, not sites.
     #if site.time > 5:
     #    tags.add(f"{site.time:.1f}s", "slow")
+    for tag in site.tags:
+        tags.add(tag)
+
     writer.start_section(f"<a class='url' href='{site.url}'>{site.url}</a>: {old}{new_text} {tags.html()}")
     for attempt in site.tried:
         strategy = attempt.strategy

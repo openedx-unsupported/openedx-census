@@ -88,7 +88,7 @@ def is_chaff_domain(domain):
     parts = re.split(r"[.-]", domain)
     return any(part.rstrip("0123456789") in CHAFF_WORDS for part in parts)
 
-SNIPS = [
+VERSION_SNIPS = [
     ('ginkgo', b'<a class="nav-skip sr-only sr-only-focusable" href="#main">'),
     ('ficus', b'DateUtilFactory.transform(iterationKey=".localized_datetime");'),
     ('eucalytpus', b'<a class="nav-skip" href="#main">'),
@@ -102,6 +102,27 @@ def sniff_version(text):
     if meta in text:
         release = text.partition(meta)[2].partition(b'"')[0]
         return release.decode()
-    for version, snip in SNIPS:
+    for version, snip in VERSION_SNIPS:
         if snip in text:
             return version
+
+TAG_SNIPS = [
+    ('bitnami', b'<div id="bitnami-banner" '),
+    ('edunext', b' href="https://www.edunext.co" '),
+    ('appsembler', b' href="https://www.appsembler.com" '),
+]
+
+TAG_URL_ENDS = [
+    ('ibm', 'openedx.site'),
+    ('edunext', 'edunext.io'),
+    ('opencraft', 'opencraft.hosting'),
+    ('appsembler', 'tahoe.appsembler.com'),
+]
+
+def sniff_tags(url, text):
+    for tag, snip in TAG_SNIPS:
+        if snip in text:
+            yield tag
+    for tag, end in TAG_URL_ENDS:
+        if url.endswith(end):
+            yield tag

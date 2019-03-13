@@ -7,7 +7,8 @@ import opaque_keys
 import opaque_keys.edx.keys
 
 from census.helpers import (
-    domain_from_url, is_chaff_domain, is_known, fingerprint, sniff_version
+    domain_from_url, is_chaff_domain, is_known, fingerprint, sniff_version,
+    sniff_tags,
 )
 
 @attr.s
@@ -40,6 +41,7 @@ class Site:
     time = attr.ib(default=None)
     fingerprint = attr.ib(default="")
     version = attr.ib(default=None)
+    tags = attr.ib(factory=set)
 
     def __eq__(self, other):
         return self.url == other.url
@@ -80,6 +82,7 @@ class Site:
         version = sniff_version(text)
         if version:
             self.version = version
+        self.tags.update(sniff_tags(self.url, text))
 
     def should_update(self):
         """Should we update this site in the database?"""
@@ -116,6 +119,10 @@ class HashedSite:
 
     def all_ssl_err(self):
         return all(site.ssl_err for site in self.sites)
+
+    def tags(self):
+        for site in self.sites:
+            yield from site.tags
 
     def best_url(self):
         non_chaff = [site for site in self.sites if not is_chaff_domain(site.url)]
