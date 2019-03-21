@@ -111,6 +111,7 @@ TAG_SNIPS = [
     ('edunext', b' href="https://www.edunext.co" '),
     ('appsembler', b' href="https://www.appsembler.com" '),
     ('raccoongang', b' href="https://raccoongang.com" '),
+    ('opencraft', b'static/simple-theme/images/logo.85cf838f1fea.png'),
 ]
 
 TAG_URL_ENDS = [
