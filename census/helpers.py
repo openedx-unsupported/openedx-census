@@ -110,6 +110,7 @@ TAG_SNIPS = [
     ('bitnami', b'<div id="bitnami-banner" '),
     ('edunext', b' href="https://www.edunext.co" '),
     ('appsembler', b' href="https://www.appsembler.com" '),
+    ('raccoongang', b' href="https://raccoongang.com" '),
 ]
 
 TAG_URL_ENDS = [
