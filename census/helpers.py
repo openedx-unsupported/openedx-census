@@ -112,6 +112,7 @@ TAG_SNIPS = [
     ('appsembler', b' href="https://www.appsembler.com" '),
     ('raccoongang', b' href="https://raccoongang.com" '),
     ('opencraft', b'static/simple-theme/images/logo.85cf838f1fea.png'),
+    ('ibl', b'static/poweredibl.png"'),
 ]
 
 TAG_URL_ENDS = [
@@ -119,6 +120,9 @@ TAG_URL_ENDS = [
     ('edunext', 'edunext.io'),
     ('opencraft', 'opencraft.hosting'),
     ('appsembler', 'tahoe.appsembler.com'),
+    ('raccoongang', 'raccoongang.com'),
+    ('ibl', 'iblstudios.com'),
+    ('ibl', 'ibleducation.com'),
 ]
 
 def sniff_tags(url, text):
