@@ -121,7 +121,7 @@ async def parse_site(site, session_factory):
             return char
 
 async def run(sites, session_kwargs):
-    kwargs = dict(max_requests=MAX_REQUESTS, timeout=TIMEOUT, headers=HEADERS)
+    kwargs = dict(max_requests=MAX_REQUESTS, headers=HEADERS)
     kwargs.update(session_kwargs)
     factory = SessionFactory(**kwargs)
     tasks = [asyncio.ensure_future(parse_site(site, factory)) for site in sites]
@@ -157,8 +157,9 @@ def cli():
 @click.option('--summarize', is_flag=True, help="Summarize results instead of saving pickle")
 @click.option('--save', is_flag=True, help="Save the scraped pages in the save/ directory")
 @click.option('--out', 'out_file', type=click.File('wb'), default=SITES_PICKLE, help="Pickle file to write")
+@click.option('--timeout', type=int, help="Timeout in seconds for each request")
 @click.argument('site_patterns', nargs=-1)
-def scrape(in_file, log_level, gone, site, summarize, save, out_file, site_patterns):
+def scrape(in_file, log_level, gone, site, summarize, save, out_file, timeout, site_patterns):
     """Visit sites and count their courses."""
     logging.basicConfig(level=log_level.upper())
     if site:
@@ -183,7 +184,9 @@ def scrape(in_file, log_level, gone, site, summarize, save, out_file, site_patte
         print(f"{len(sites)} sites")
 
     # SCRAPE!
-    session_kwargs = {}
+    session_kwargs = {
+        'timeout': timeout,
+    }
     if save:
         session_kwargs['save'] = True
     scrape_sites(sites, session_kwargs)
