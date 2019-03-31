@@ -151,15 +151,14 @@ def cli():
 
 @cli.command()
 @click.option('--in', 'in_file', type=click.Path(exists=True), help="File of sites to scrape")
-@click.option('--log', 'log_level', type=str, default='info')
-@click.option('--min', type=int, default=0)
-@click.option('--gone', is_flag=True)
-@click.option('--site', is_flag=True)
-@click.option('--summarize', is_flag=True)
-@click.option('--save', is_flag=True)
-@click.option('--out', 'out_file', type=click.File('wb'), default=SITES_PICKLE)
+@click.option('--log', 'log_level', type=str, default='info', help="Logging level to use")
+@click.option('--gone', is_flag=True, help="Scrape the sites we've recorded as gone")
+@click.option('--site', is_flag=True, help="Command-line arguments are URLs to scrape")
+@click.option('--summarize', is_flag=True, help="Summarize results instead of saving pickle")
+@click.option('--save', is_flag=True, help="Save the scraped pages in the save/ directory")
+@click.option('--out', 'out_file', type=click.File('wb'), default=SITES_PICKLE, help="Pickle file to write")
 @click.argument('site_patterns', nargs=-1)
-def scrape(in_file, log_level, min, gone, site, summarize, save, out_file, site_patterns):
+def scrape(in_file, log_level, gone, site, summarize, save, out_file, site_patterns):
     """Visit sites and count their courses."""
     logging.basicConfig(level=log_level.upper())
     if site:
@@ -172,7 +171,7 @@ def scrape(in_file, log_level, min, gone, site, summarize, save, out_file, site_
             sites = read_sites_csv(in_file)
         else:
             sites = read_sites_flat(in_file)
-        sites = [s for s in sites if s.latest_courses >= min]
+        sites = list(sites)
         if site_patterns:
             sites = [s for s in sites if any(re.search(p, s.url) for p in site_patterns)]
         if not gone:
