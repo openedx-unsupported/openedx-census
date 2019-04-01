@@ -164,7 +164,7 @@ def scrape(in_file, log_level, gone, site, summarize, save, out_file, timeout, s
     logging.basicConfig(level=log_level.upper())
     if site:
         # Exact sites provided on the command line
-        sites = [Site.from_url(u) for u in site_patterns]
+        sites = (Site.from_url(u) for u in site_patterns)
     else:
         # Make the list of sites we're going to scrape.
         in_file = in_file or SITES_CSV
@@ -172,12 +172,12 @@ def scrape(in_file, log_level, gone, site, summarize, save, out_file, timeout, s
             sites = read_sites_csv(in_file)
         else:
             sites = read_sites_flat(in_file)
-        sites = list(sites)
         if site_patterns:
-            sites = [s for s in sites if any(re.search(p, s.url) for p in site_patterns)]
+            sites = (s for s in sites if any(re.search(p, s.url) for p in site_patterns))
         if not gone:
-            sites = [s for s in sites if not s.is_gone]
+            sites = (s for s in sites if not s.is_gone)
 
+    sites = list(sites)
     if len(sites) == 1:
         print("1 site")
     else:
@@ -185,10 +185,9 @@ def scrape(in_file, log_level, gone, site, summarize, save, out_file, timeout, s
 
     # SCRAPE!
     session_kwargs = {
+        'save': save,
         'timeout': timeout,
     }
-    if save:
-        session_kwargs['save'] = True
     scrape_sites(sites, session_kwargs)
 
     if summarize:
