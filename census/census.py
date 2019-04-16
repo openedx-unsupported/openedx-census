@@ -157,7 +157,7 @@ def cli():
 @click.option('--summarize', is_flag=True, help="Summarize results instead of saving pickle")
 @click.option('--save', is_flag=True, help="Save the scraped pages in the save/ directory")
 @click.option('--out', 'out_file', type=click.File('wb'), default=SITES_PICKLE, help="Pickle file to write")
-@click.option('--timeout', type=int, help="Timeout in seconds for each request")
+@click.option('--timeout', type=int, help=f"Timeout in seconds for each request [{TIMEOUT}]", default=TIMEOUT)
 @click.argument('site_patterns', nargs=-1)
 def scrape(in_file, log_level, gone, site, summarize, save, out_file, timeout, site_patterns):
     """Visit sites and count their courses."""
