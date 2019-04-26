@@ -108,7 +108,9 @@ async def parse_site(site, session_factory):
                     site.custom_parser_err = False
                     log.debug("SSL error: %s", (errs,))
                     continue
-                if all_have_snippets(errs, GONE_MSGS):
+                gone_content = site.current_courses is None and not site.is_openedx
+                gone_http = all_have_snippets(errs, GONE_MSGS)
+                if gone_content or gone_http:
                     site.is_gone_now = True
                     if site.is_gone:
                         char = 'X'

@@ -29,6 +29,9 @@ class Site:
     ## Stuff that we scrape:
     current_courses = attr.ib(default=None)
     is_gone_now = attr.ib(default=False)
+    # Is there any indication at all that this is an open edx site? For use
+    # when there are no courses.
+    is_openedx = attr.ib(default=False)
 
     # Maps course-ids to number of instances of the course
     course_ids = attr.ib(factory=collections.Counter)

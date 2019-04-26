@@ -262,6 +262,8 @@ def filter_by_date(elts, cutoff):
         ok.append(elt)
     return ok
 
+OPENEDX_SNIPS = [b"open edx", b"openedx", b"edx.org", b"edx-theme-codebase"]
+
 async def count_tiles(url, site, session):
     text = await session.text_from_url(url)
     elts = elements_by_css(text, ".courses ul.courses-listing > li")
@@ -270,6 +272,9 @@ async def count_tiles(url, site, session):
         elts = elements_by_css(text, ".courses-listing-item")
         count = len(elts)
         if count == 0:
+            # No courses, but do we see any indication of it being open edx?
+            if any(snip in text.lower() for snip in OPENEDX_SNIPS):
+                site.is_openedx = True
             raise GotZero("No .courses-listing-item's")
 
     soon = datetime.datetime.now() + datetime.timedelta(days=365)
