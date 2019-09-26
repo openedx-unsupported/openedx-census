@@ -15,9 +15,9 @@ from census.helpers import (
 from census.site_patterns import matches, matches_any
 
 # XuetangX: add up courses by institution.
-@matches("www.xuetangx.com")
+@matches("xuetangx.com")
 async def xuetang_parser(site, session):
-    url = "http://www.xuetangx.com/partners"
+    url = site_url(site, "/partners")
     text = await session.text_from_url(url)
     site.add_to_fingerprint(text)
     section = elements_by_xpath(text, "/html/body/article[1]/section")
@@ -51,7 +51,7 @@ async def openedu_tw_parser(site, session):
 
 @matches("openedu.ru")
 async def openedu_ru_parser(site, session):
-    url = "https://openedu.ru/course/"
+    url = site_url(site, "/course/")
     text = await session.text_from_url(url)
     site.add_to_fingerprint(text)
     count = element_by_css(text, "span#courses-found")
@@ -60,13 +60,13 @@ async def openedu_ru_parser(site, session):
 
 @matches("gacco.org")
 async def gacco_parser(site, session):
-    url = "http://gacco.org/data/course/gacco_list.json"
+    url = site_url(site, "/data/course/gacco_list.json")
     text = await session.text_from_url(url)
     site.add_to_fingerprint(text)
     data = json.loads(text)
     count = len(data["opened_courses"])
 
-    url = "http://gacco.org/data/course/gacco_archive.json"
+    url = site_url(site, "/data/course/gacco_archive.json")
     text = await session.text_from_url(url)
     site.add_to_fingerprint(text)
     data = json.loads(text)
@@ -90,7 +90,7 @@ async def count_elements_parser(site, session, rel_url, css):
 
 @matches("millionlights.org")
 async def millionlights_parser(site, session):
-    url = "https://www.millionlights.org/Course/AllCourses"
+    url = site_url(site, "/Course/AllCourses")
     text = await session.text_from_url(url)
     site.add_to_fingerprint(text)
     # Find the language-faceted results, and add up their parenthesized
@@ -104,7 +104,7 @@ async def millionlights_parser(site, session):
 
 @matches("enlightme.net")
 async def enlightme_parser(site, session):
-    url = "https://www.enlightme.net/courses/"
+    url = site_url(site, "/courses/")
     text = await session.text_from_url(url)
     site.add_to_fingerprint(text)
     elt = element_by_css(text, ".course-index span")
@@ -113,7 +113,7 @@ async def enlightme_parser(site, session):
 
 @matches("skills.med.hku.hk")
 async def hku_hk_parser(site, session):
-    url = "https://skills.med.hku.hk/mbbs_admin/public/downloadMbbsJsonFile"
+    url = site_url(site, "/mbbs_admin/public/downloadMbbsJsonFile")
     text = await session.text_from_url(url)
     site.add_to_fingerprint(text)
     data = json.loads(text)
@@ -122,7 +122,7 @@ async def hku_hk_parser(site, session):
 
 @matches("skillvideo.nursing.hku.hk")
 async def hku_nursing_parser(site, session):
-    url = "https://skillvideo.nursing.hku.hk/nurs_admin/public/downloadNursJsonFile"
+    url = site_url(site, "/nurs_admin/public/downloadNursJsonFile")
     text = await session.text_from_url(url)
     site.add_to_fingerprint(text)
     data = json.loads(text)
@@ -131,7 +131,7 @@ async def hku_nursing_parser(site, session):
 
 @matches("learning.hku.hk")
 async def learning_hku_parser(site, session):
-    url = "https://learning.hku.hk/catalog/all-courses/"
+    url = site_url(site, "/catalog/all-courses/")
     text = await session.text_from_url(url)
     site.add_to_fingerprint(text)
     elt = element_by_css(text, "li#course-all span")
@@ -140,7 +140,7 @@ async def learning_hku_parser(site, session):
 
 @matches("iitbombayx.in")
 async def iitbombayx_parser(site, session):
-    url = "https://iitbombayx.in/courses"
+    url = site_url(site, "/courses")
     text = await session.text_from_url(url)
     site.add_to_fingerprint(text)
     elts = elements_by_css(text, "#block-timeline-2 .facet-item__count")
@@ -151,7 +151,7 @@ async def iitbombayx_parser(site, session):
 
 @matches("edraak.org")
 async def edraak_org_parser(site, session):
-    url = "https://www.edraak.org/en/courses/"
+    url = site_url(site, "/en/courses/")
     text = await session.text_from_url(url)
     site.add_to_fingerprint(text)
     elts = elements_by_css(text, "aside.all-courses div.course span")
@@ -162,7 +162,7 @@ async def edraak_org_parser(site, session):
 
 @matches("edcast.org")
 async def edcast_org_parser(site, session):
-    url = "https://www.edcast.org/search"
+    url = site_url(site, "/search")
     text = await session.text_from_url(url)
     site.add_to_fingerprint(text)
     h4 = element_by_css(text, ".search-navigation-row h4")
