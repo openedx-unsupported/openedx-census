@@ -341,7 +341,7 @@ def login(site, session):
     login_url = urllib.parse.urljoin(site, "/login/")
     resp = session.get(login_url)
     resp.raise_for_status()
-    m = re.search(r"name='csrfmiddlewaretoken' value='([^']+)'", resp.text)
+    m = re.search(r'name="csrfmiddlewaretoken" value="([^"]+)"', resp.text)
     if m:
         csrftoken = m.group(1)
     else:
