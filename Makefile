@@ -45,10 +45,12 @@ get_known:			## pull down the csv of known sites
 NEW_REFS = refs/new-refs.txt
 NEW_PICKLE = state/new-refs.pickle
 
-new_refs:			## scrape new referrers in the last 2 months
+$(NEW_REFS): $(ALL_REFS)
 	@# Sorry for the shell craziness!
 	@# date -v-2m    gives us the date of two months ago, so we can see the new referrers.
 	comm -13 refs/history/$$(ls -1 refs/history | awk '{if ($$0 < "referers_'$$(date -v-2m '+%Y%m%d')'.txt") print}' | tail -1) $(ALL_REFS) > $(NEW_REFS)
+
+new_refs: $(NEW_REFS)		## scrape new referrers in the last 2 months
 	census scrape --in $(NEW_REFS) --out $(NEW_PICKLE)
 	census html --in $(NEW_PICKLE) --out html/new-refs.html --skip-none --only-new
 
