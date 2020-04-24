@@ -35,6 +35,7 @@ async def xuetang_parser(site, session):
 # FUN has an api that returns a count.
 @matches("fun-mooc.fr", "/fun/api/courses/?rpp=50&page=1", "count")
 @matches("learn.in.th", "/main/frontend/ListCourses/listSearch/1", "all_row")
+@matches("develop.com", "/wp-json/dcom-blocks/v1/courses/", "total")
 async def json_total_value_parser(site, session, rel_url, key):
     url = site_url(site, rel_url)
     text = await session.text_from_url(url)
