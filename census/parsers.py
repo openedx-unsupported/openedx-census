@@ -33,13 +33,14 @@ async def xuetang_parser(site, session):
     return courses
 
 # FUN has an api that returns a count.
-@matches("fun-mooc.fr")
-async def fun_parser(site, session):
-    url = site_url(site, "/fun/api/courses/?rpp=50&page=1")
+@matches("fun-mooc.fr", "/fun/api/courses/?rpp=50&page=1", "count")
+@matches("learn.in.th", "/main/frontend/ListCourses/listSearch/1", "all_row")
+async def json_total_value_parser(site, session, rel_url, key):
+    url = site_url(site, rel_url)
     text = await session.text_from_url(url)
     site.add_to_fingerprint(text)
     data = json.loads(text)
-    return data['count']
+    return data[key]
 
 @matches("://openedu.tw")
 async def openedu_tw_parser(site, session):
@@ -216,14 +217,6 @@ async def gotoclass_parser(site, session):
         assert len(next_a) == 1
         url = urllib.parse.urljoin(url, next_a[0].get('href'))
     return count
-
-@matches("learn.in.th")
-async def learn_in_th_parser(site, session):
-    url = site_url(site, "/main/frontend/ListCourses/listSearch/1")
-    text = await session.text_from_url(url)
-    site.add_to_fingerprint(text)
-    data = json.loads(text)
-    return data['all_row']
 
 @matches("openu.kz")
 async def openu_kz_parser(site, session):
