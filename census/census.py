@@ -89,6 +89,9 @@ async def parse_site(site, session_factory):
                     errs.append(err)
                     if custom_parser:
                         site.custom_parser_err = True
+                else:
+                    if custom_parser:
+                        break
 
             if success:
                 site.current_courses = max(attempt.courses for attempt in site.tried if attempt.courses is not None)
