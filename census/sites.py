@@ -128,12 +128,21 @@ class HashedSite:
             yield from site.tags
 
     def best_url(self):
-        non_chaff = [site for site in self.sites if not is_chaff_domain(site.url)]
-        if non_chaff:
-            url = non_chaff[0].url
-        else:
-            url = self.sites[0].url
-        return url
+        site_urls = [site.url for site in self.sites]
+        non_chaff = [url for url in site_urls if not is_chaff_domain(domain_from_url(url))]
+        urls = non_chaff or site_urls
+        urls = non_sub_urls(urls)
+        return urls[0]
+
+
+def non_sub_urls(urls):
+    """Return urls that are not subdomains of other urls."""
+    domain_parts = [domain_from_url(u).split(".") for u in urls]
+    def is_prefix(dp1, dp2):
+        return dp1 != dp2 and dp2[len(dp2)-len(dp1):] == dp1
+    non_sub_doms = [".".join(d) for d in domain_parts if not any(is_prefix(d2, d) for d2 in domain_parts)]
+    non_subs = [u for u in urls if domain_from_url(u) in non_sub_doms]
+    return non_subs
 
 
 def clean_url(url):
