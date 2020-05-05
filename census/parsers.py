@@ -142,6 +142,15 @@ async def learning_hku_parser(site, session):
     count = int(elt.text)
     return count
 
+@matches("campus.gov.il")
+async def campus_il_parser(site, session):
+    url = site_url(site, "/course")
+    text = await session.text_from_url(url)
+    site.add_to_fingerprint(text)
+    elt = element_by_css(text, "span#add-sum-course")
+    count = int(elt.text)
+    return count
+
 @matches("iitbombayx.in")
 async def iitbombayx_parser(site, session):
     url = site_url(site, "/courses")
