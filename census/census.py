@@ -361,6 +361,8 @@ def getcsv(site):
         login(site, s)
         csv_url = urllib.parse.urljoin(site, "/sites/csv/?complete=1")
         resp = s.get(csv_url)
+        if resp.status_code != 200:
+            resp.raise_for_status()
         content = resp.content
         with open(SITES_CSV, "wb") as csv_file:
             csv_file.write(content)
