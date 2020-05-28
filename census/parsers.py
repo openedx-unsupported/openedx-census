@@ -14,24 +14,6 @@ from census.helpers import (
 )
 from census.site_patterns import matches, matches_any
 
-# XuetangX: add up courses by institution.
-@matches("xuetangx.com")
-async def xuetang_parser(site, session):
-    url = site_url(site, "/partners")
-    text = await session.text_from_url(url)
-    site.add_to_fingerprint(text)
-    section = elements_by_xpath(text, "/html/body/article[1]/section")
-    assert len(section) == 1
-    assert section[0].xpath("h2")[0].text == "开课院校"
-    li = section[0].xpath("ul/li/a/div[2]/p[1]")
-    courses = 0
-    for l in li:
-        suffix = "门课程"
-        text = l.text
-        assert text.endswith(suffix)
-        courses += int(text[:-len(suffix)])
-    return courses
-
 # FUN has an api that returns a count.
 @matches("fun-mooc.fr", "/fun/api/courses/?rpp=50&page=1", "count")
 @matches("learn.in.th", "/main/frontend/ListCourses/listSearch/1", "all_row")
