@@ -80,7 +80,7 @@ def is_known(site, known_domains):
 CHAFF_WORDS = set("""
     stage staging preview demo dev sandbox test loadtest qa
     trafficmanager cloudapp
-    aspen birch cypress dogwood eucalyptus ficus ginkgo hawthorn ironwood
+    aspen birch cypress dogwood eucalyptus ficus ginkgo hawthorn ironwood juniper koa
     """.split())
 
 def is_chaff_domain(domain):
