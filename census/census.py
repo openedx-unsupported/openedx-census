@@ -167,6 +167,10 @@ def cli():
 def scrape(in_file, log_level, gone, site, summarize, save, out_file, timeout, site_patterns):
     """Visit sites and count their courses."""
     logging.basicConfig(level=log_level.upper())
+    # aiohttp issues warnings about cookies, silence them (and all other warnings!)
+    # WARNING:aiohttp.client:Can not load response cookies: Illegal key
+    # The bad cookies were from http://rechum.sev.gob.mx
+    logging.getLogger('aiohttp.client').setLevel(logging.ERROR)
     if site:
         # Exact sites provided on the command line
         sites = (Site.from_url(u) for u in site_patterns)
