@@ -292,14 +292,15 @@ async def edx_search_post(site, session):
         'only_can_enroll_courses': 'false',
         'page_size': 100,
         }
+    count = 0
+    soon = (datetime.datetime.now() + datetime.timedelta(days=365)).isoformat()
     for search_params['page_index'] in itertools.count():
         text = await session.text_from_url(url, came_from=url0, method='post', data=search_params)
         try:
             data = json.loads(text)
         except Exception:
             raise Exception(f"Couldn't parse result from json: {text[:100]!r}")
-        count = data["total"]
-        if count == 0:
+        if data["total"] == 0:
             raise GotZero("data[total] is zero")
         if not data["results"]:
             # We've paginated through all the results.
@@ -307,6 +308,9 @@ async def edx_search_post(site, session):
         try:
             for course in data["results"]:
                 site.course_ids[course["_id"]] += 1
+                start = course["data"]["start"]
+                if start < soon:
+                    count += 1
         except Exception:
             pass
         # The JSON has a "took" key, the time to respond, which we don't
