@@ -9,3 +9,6 @@ census/keys.py
 .ipynb_checkpoints
 .pytest_cache
 *.egg-info
+.idea/*
+.tox/*
+
