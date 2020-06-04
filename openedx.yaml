@@ -5,4 +5,4 @@ owner: nedbat
 supporting_teams: edx/openedx-tooling
 
 oeps:
-  oep-18: false
+  oep-18: true
