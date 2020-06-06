@@ -25,8 +25,8 @@ pycares==3.1.1            # via aiodns
 pycparser==2.20           # via cffi
 pymongo==3.10.1           # via edx-opaque-keys
 requests==2.23.0          # via -r requirements/base.in
-six==1.15.0               # via edx-opaque-keys, stevedore
-stevedore==1.32.0         # via edx-opaque-keys
-tqdm==4.46.0              # via -r requirements/base.in
+six==1.15.0               # via edx-opaque-keys
+stevedore==2.0.0          # via edx-opaque-keys
+tqdm==4.46.1              # via -r requirements/base.in
 urllib3==1.25.9           # via requests
 yarl==1.4.2               # via aiohttp

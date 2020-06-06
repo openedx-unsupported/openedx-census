@@ -79,6 +79,7 @@ upgrade: ## update the requirements/*.txt files with the latest packages satisfy
 	pip-compile --upgrade -o requirements/base.txt requirements/base.in
 	pip-compile --upgrade -o requirements/test.txt requirements/test.in
 	pip-compile --upgrade -o requirements/tox.txt requirements/tox.in
+	pip-compile --upgrade -o requirements/travis.txt requirements/travis.in
 
 test: requirements
 	tox
