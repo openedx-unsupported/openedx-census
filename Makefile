@@ -7,7 +7,7 @@ help: 				## display this help message
 	@grep '^[a-zA-Z]' $(MAKEFILE_LIST) | sort | awk -F ':.*?## ' 'NF==2 {printf "\033[36m  %-25s\033[0m %s\n", $$1, $$2}'
 
 dev: install			## prepare for development
-	pip install -r dev-requirements.txt
+	pip install -r requirements/test.txt
 
 install:			## install this project to run it
 	pip install -e .
