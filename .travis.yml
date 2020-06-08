@@ -1,0 +1,12 @@
+language: python
+sudo: false
+python:
+  - 3.6
+  - 3.8
+env:
+  - TOXENV=testenv
+install:
+  - pip install -r requirements/travis.txt
+script:
+  - tox
+
