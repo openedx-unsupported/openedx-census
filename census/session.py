@@ -85,7 +85,7 @@ class Saver:
         os.makedirs(self.dir, exist_ok=True)
         num = next(self.numbers)
         ext = re.split(r"[+/]", response.content_type)[-1]
-        save_name = f"{num:03d}.{ext}"
+        save_name = f"{num:05d}.{ext}"
         with open(os.path.join(self.dir, "index.txt"), "a") as idx:
             print(f"{save_name}: {response.method} {url} ({response.status})", file=idx)
         with open(os.path.join(self.dir, save_name), "wb") as f:
