@@ -1,6 +1,6 @@
 # Makefile for openedx-census
 
-.PHONY: help dev install
+.PHONY: help dev install clean
 
 help: 				## display this help message
 	@echo "Please use \`make <target>' where <target> is one of:"
@@ -68,6 +68,10 @@ known_sites:			## scrape the known sites
 
 post:				## update the stats site with the latest known_sites scrape
 	census post
+
+## Requirements maintenance
+
+.PHONY: requirements upgrade test
 
 requirements:
 	pip install -r requirements/test.txt
