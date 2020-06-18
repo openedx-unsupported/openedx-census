@@ -113,6 +113,7 @@ TAG_SNIPS = [
     ('raccoongang', b' href="https://raccoongang.com" '),
     ('opencraft', b'static/simple-theme/images/logo.85cf838f1fea.png'),
     ('ibl', b'static/poweredibl.png"'),
+    ('tutor', b'docs.tutor.overhang.io'),
 ]
 
 TAG_URL_ENDS = [
