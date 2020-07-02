@@ -114,6 +114,7 @@ TAG_SNIPS = [
     ('opencraft', b'static/simple-theme/images/logo.85cf838f1fea.png'),
     ('ibl', b'static/poweredibl.png"'),
     ('tutor', b'docs.tutor.overhang.io'),
+    ('indigo', b'type="image/x-icon" href="/static/indigo3/images/favicon'),
 ]
 
 TAG_URL_ENDS = [
