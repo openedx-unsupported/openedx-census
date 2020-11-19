@@ -66,6 +66,7 @@ async def gacco_parser(site, session):
 @matches("erevuka.org", "/courses/", "#courses-wrapper .single-course-wrapper")
 @matches("xpro.mit.edu", "/catalog/", "#all .catalog-card")
 @matches("lge.smartlearn.io", "/", "article")
+@matches("edx.gchumanrights.org", "/courses/", ".course_info")
 async def count_elements_parser(site, session, rel_url, css):
     url = site_url(site, rel_url)
     text = await session.text_from_url(url)
