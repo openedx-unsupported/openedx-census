@@ -1,5 +1,6 @@
 """Parsers for specific sites."""
 
+import collections
 import datetime
 import itertools
 import json
@@ -57,6 +58,7 @@ async def gacco_parser(site, session):
     count += len(data["archived_courses"])
     return count
 
+# Lots of sites have customized CSS for their courses
 @matches("doroob.sa", "/ar/individuals/elearning/", ".courses-listing-item")
 @matches("labster.com", "/simulations/", ".md-simulation-card")
 @matches("wasserx.com", "/courses/", "li.course-item")
@@ -218,6 +220,31 @@ async def openu_kz_parser(site, session):
     site.add_to_fingerprint(text)
     stat_elt = elements_by_css(text, ".statistics-block .statistics-block__value")[0]
     count = int(stat_elt.text)
+    return count
+
+@matches("academy.numfocus.org")
+async def numfocus_parser(site, session):
+    urls = collections.deque()
+    urls.append(site.url)
+    count = 0
+    while urls:
+        url = urls.popleft()
+        text = await session.text_from_url(url)
+        site.add_to_fingerprint(text)
+
+        # Look for courses.
+        tiles = elements_by_css(text, ".course-rec-3")
+        count += len(tiles)
+
+        # Look for further pages that are or have courses.
+        subs = elements_by_css(text, ".et_pb_blurb_content a")
+        hrefs = set(sub.get("href") for sub in subs)
+        for href in hrefs:
+            if "/about-course/" in href:
+                count += 1
+            else:
+                urls.append(href)
+
     return count
 
 @matches("www.edx.org")
