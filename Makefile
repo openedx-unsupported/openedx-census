@@ -59,6 +59,7 @@ ALL_PICKLE = state/all-refs.pickle
 all_refs:			## scrape all referrers ever
 	census scrape --in $(ALL_REFS) --out $(ALL_PICKLE)
 	census html --in $(ALL_PICKLE) --out html/all-refs.html --skip-none --only-new
+	census html --in $(ALL_PICKLE) --out html/aall-refs.html --skip-none
 
 known_sites:			## scrape the known sites
 	census scrape --gone
