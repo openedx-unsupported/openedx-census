@@ -266,6 +266,13 @@ async def edx_org_parser(site, session):
             break
     return count
 
+# I would like to have a way to "symlink" one site to another, and have the
+# full parsing machinery operate on that other site, but that got complicated.
+# This is a quick way to get the same effect.
+@matches("edx.hospitalmoinhos.org.br", "http://lms.hospitalmoinhos.org.br/")
+async def count_other_site_tiles(site, session, other_url):
+    return await count_tiles(other_url, site, session)
+
 
 # Generic parsers
 
