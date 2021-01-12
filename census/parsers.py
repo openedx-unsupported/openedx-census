@@ -238,7 +238,7 @@ async def numfocus_parser(site, session):
 
         # Look for further pages that are or have courses.
         subs = elements_by_css(text, ".et_pb_blurb_content a")
-        hrefs = set(sub.get("href") for sub in subs)
+        hrefs = {sub.get("href") for sub in subs}
         for href in hrefs:
             if "/about-course/" in href:
                 count += 1

@@ -1,8 +1,7 @@
 language: python
 sudo: false
 python:
-  - 3.6
-  - 3.8
+  - '3.8'
 env:
   - TOXENV=testenv
 install:
