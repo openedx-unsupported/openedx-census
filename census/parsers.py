@@ -26,6 +26,12 @@ async def json_total_value_parser(site, session, rel_url, key):
     data = json.loads(text)
     return data[key]
 
+@matches("darsup.org", "/search", rb'"countCourses":(\d+),')
+async def regex_extract_parser(site, session, rel_url, pattern):
+    url = site_url(site, rel_url)
+    text = await session.text_from_url(url)
+    return int(re.search(pattern, text)[1])
+
 @matches("://openedu.tw")
 async def openedu_tw_parser(site, session):
     url = "https://www.openedu.tw/rest/courses/query"
