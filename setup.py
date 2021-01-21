@@ -29,7 +29,7 @@ def is_requirement(line):
 
 setup(
     name='openedx-census',
-    version='0.2.0',
+    version='1.0.0',
     license='Apache 2',
     description='Open edX census tool',
     author='Ned Batchelder',
@@ -43,7 +43,6 @@ setup(
         'Operating System :: OS Independent',
         'Programming Language :: Python',
         'Programming Language :: Python :: 3',
-        'Programming Language :: Python :: 3.6',
         'Programming Language :: Python :: 3.8',
 
     ],
