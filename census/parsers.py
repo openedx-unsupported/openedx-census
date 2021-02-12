@@ -369,3 +369,17 @@ async def courses_page_full_of_tiles(site, session):
 @matches_any
 async def home_page_full_of_tiles(site, session):
     return await count_tiles(site.url, site, session)
+
+# This isn't ready yet.
+# Studio has a link to its LMS.  This could help us find sites that aren't
+# displaying the powered-by logo on the LMS.
+# @matches_any
+async def studio_to_tiles(site, session):
+    url = site_url(site, "/")
+    text = await session.text_from_url(url)
+    site.add_to_fingerprint(text)
+    lms_links = elements_by_css(text, "#lms-link")
+    if len(lms_links) == 1:
+        lms_link = lms_links[0].get("href")
+        return await count_tiles(lms_link, site, session)
+    raise GotZero("Not studio I guess")
