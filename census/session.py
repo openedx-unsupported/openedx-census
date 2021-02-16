@@ -1,5 +1,6 @@
 import asyncio
 import itertools
+import json
 import logging
 import os
 import re
@@ -52,7 +53,7 @@ class SmartSession:
                 real_url = str(resp.url)
                 from_text = await resp.read()
             if self.saver and (save or self.save):
-                self.saver(url, from_text, resp)
+                self.saver(came_from, from_text, resp)
             cookies = self.session.cookie_jar.filter_cookies(url)
             if 'csrftoken' in cookies:
                 self.headers['X-CSRFToken'] = cookies['csrftoken'].value
@@ -90,6 +91,14 @@ class Saver:
             print(f"{save_name}: {response.method} {url} ({response.status})", file=idx)
         with open(os.path.join(self.dir, save_name), "wb") as f:
             f.write(text)
+        if 0:
+            if response.history:
+                print("-"*80, num)
+                print(url, [h.url for h in response.history], response.url)
+        if 1:
+            if str(response.url) != url:
+                with open(os.path.join(self.dir, "redirects.jsonl"), "a") as redirs:
+                    print(json.dumps([url, str(response.url)]), file=redirs)
 
 
 class SessionFactory:
