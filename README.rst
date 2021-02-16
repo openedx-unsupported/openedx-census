@@ -5,6 +5,10 @@ Open edX Census
 A command-line tool for scraping information from Open edX sites to
 gauge how many courses they are running.
 
+Before using, create (or check) the file census/keys.py.  It must
+define two variables, "username" and "password", to use to access
+the stats site.  That file is not committed to git.
+
 Requires Python 3.8 (or greater).
 
 - Installation (including requirements)::
