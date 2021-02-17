@@ -84,13 +84,14 @@ class Saver:
 
     def save(self, url, text, response):
         os.makedirs(self.dir, exist_ok=True)
-        num = next(self.numbers)
-        ext = re.split(r"[+/]", response.content_type)[-1]
-        save_name = f"{num:06d}.{ext}"
-        with open(os.path.join(self.dir, "index.txt"), "a") as idx:
-            print(f"{save_name}: {response.method} {url} ({response.status})", file=idx)
-        with open(os.path.join(self.dir, save_name), "wb") as f:
-            f.write(text)
+        if 0:
+            num = next(self.numbers)
+            ext = re.split(r"[+/]", response.content_type)[-1]
+            save_name = f"{num:06d}.{ext}"
+            with open(os.path.join(self.dir, "index.txt"), "a") as idx:
+                print(f"{save_name}: {response.method} {url} ({response.status})", file=idx)
+            with open(os.path.join(self.dir, save_name), "wb") as f:
+                f.write(text)
         if 0:
             if response.history:
                 print("-"*80, num)
