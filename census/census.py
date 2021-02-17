@@ -383,7 +383,31 @@ def post(site):
 
     with requests.Session() as s:
         login(site, s)
-        bulk_url = urllib.parse.urljoin(site, "/sites/bulk/")
+        bulk_url = urllib.parse.urljoin(site, "/sites/bulk_update/")
+        resp = s.post(bulk_url, data=data)
+        print(resp.text)
+
+
+@cli.command()
+@click.argument('site', default=STATS_SITE)
+def bulkcreate(site):
+    """Upload a YAML file to create a number of sites.
+
+    The yaml is like this:
+
+    - url: https://lms.cursate.org
+      course_count: 4
+      language: Spanish
+      geography: Colombia
+      notes: eduNEXT
+
+    """
+    with open("bulk.yaml") as f:
+        data = f.read()
+
+    with requests.Session() as s:
+        login(site, s)
+        bulk_url = urllib.parse.urljoin(site, "/sites/bulk_create/")
         resp = s.post(bulk_url, data=data)
         print(resp.text)
 
