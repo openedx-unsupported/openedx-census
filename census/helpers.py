@@ -116,6 +116,7 @@ TAG_SNIPS = [
     ('ibl', b'static/poweredibl.png"'),
     ('tutor', b'docs.tutor.overhang.io'),
     ('indigo', b'type="image/x-icon" href="/static/indigo3/images/favicon'),
+    ('aulasneo', b'aulasneo'),
 ]
 
 TAG_URL_ENDS = [
@@ -126,6 +127,7 @@ TAG_URL_ENDS = [
     ('raccoongang', 'raccoongang.com'),
     ('ibl', 'iblstudios.com'),
     ('ibl', 'ibleducation.com'),
+    ('aulasneo', 'aulasneo.com'),
 ]
 
 def sniff_tags(url, text):
