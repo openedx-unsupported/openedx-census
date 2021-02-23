@@ -103,6 +103,25 @@ class Site:
             return True
         return False
 
+    def styled_tags(self):
+        """Return a list of (tag_text, tag_style)"""
+        tags = []
+        def add_tag(text, style=None):
+            tags.append((text, style))
+        for t in self.tags:
+            add_tag(t)
+        if self.is_gone_now:
+            add_tag("Gone")
+        elif self.is_gone:
+            add_tag("Back")
+        if self.ssl_err:
+            add_tag("SSL")
+        if self.custom_parser_err:
+            add_tag("Custom parser error", "bad")
+        if self.version:
+            add_tag(self.version, "version")
+        return tags
+
 
 @attr.s()
 class HashedSite:

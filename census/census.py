@@ -317,6 +317,9 @@ def show_text_report(sites):
             else:
                 line = f"Counted {attempt.courses} courses"
             print(f"    {attempt.strategy}: {line}")
+        tags = ", ".join(t for t, s in site.styled_tags())
+        if tags:
+            print(f"    [{tags}]")
 
 def json_update(sites, all_courses, include_overcount=False):
     """Write a JSON file for uploading to the stats site.

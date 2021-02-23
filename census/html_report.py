@@ -179,25 +179,15 @@ def write_site(site, writer, known_domains):
             new_text = f"<b> &rarr; {new}</b>"
         if old != 0 and new != 0 and abs(new - old) > 10 and not (0.5 >= old/new >= 1.5):
             tags.add("Drastic")
-    if site.is_gone_now:
-        tags.add("Gone")
-    elif site.is_gone:
-        tags.add("Back")
     if is_chaff_domain(domain_from_url(site.url)):
         tags.add("Chaff")
     elif not is_known(site, known_domains):
         tags.add("New")
-    if site.ssl_err:
-        tags.add("SSL")
-    if site.custom_parser_err:
-        tags.add("Custom parser error", "bad")
-    if site.version:
-        tags.add(site.version, "version")
     # Times are not right now that we limit requests, not sites.
     #if site.time > 5:
     #    tags.add(f"{site.time:.1f}s", "slow")
-    for tag in site.tags:
-        tags.add(tag)
+    for tag, style in site.styled_tags():
+        tags.add(tag, style)
 
     writer.start_section(f"<a class='url' href='{site.url}'>{site.url}</a>: {old}{new_text} {tags.html()}")
     for attempt in site.tried:
