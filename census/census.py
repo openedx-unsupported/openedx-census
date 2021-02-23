@@ -58,6 +58,10 @@ CERTIFICATE_MSGS = [
     "CertificateError:",
 ]
 
+FALSE_ALARM_CERTIFICATE_MSGS = [
+    "unable to get local issuer certificate",
+]
+
 log = logging.getLogger(__name__)
 
 def all_have_snippets(errors, snippets):
@@ -106,7 +110,10 @@ async def parse_site(site, session_factory):
                         char = '+'
             else:
                 if verify_ssl and all_have_snippets(errs, CERTIFICATE_MSGS):
-                    site.ssl_err = True
+                    # We had an SSL error.  Try again. But only mark it as an error if it wasn't
+                    # a false alarm error.
+                    if not all_have_snippets(errs, FALSE_ALARM_CERTIFICATE_MSGS):
+                        site.ssl_err = True
                     site.tried = []
                     site.custom_parser_err = False
                     log.debug("SSL error: %s", (errs,))
