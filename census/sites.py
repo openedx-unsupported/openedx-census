@@ -124,8 +124,7 @@ class HashedSite:
         return all(site.ssl_err for site in self.sites)
 
     def tags(self):
-        for site in self.sites:
-            yield from site.tags
+        return set(t for site in self.sites for t in site.tags)
 
     def best_url(self):
         site_urls = [site.url for site in self.sites]
