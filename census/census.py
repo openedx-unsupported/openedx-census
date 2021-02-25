@@ -373,7 +373,7 @@ def getcsv(site):
     """Get the sites.csv file from the app."""
     with requests.Session() as s:
         login(site, s)
-        csv_url = urllib.parse.urljoin(site, "/sites/csv/?complete=1")
+        csv_url = urllib.parse.urljoin(site, "/sites/csv/?include_gone=1&skip_lang_geo=1")
         resp = s.get(csv_url)
         if resp.status_code != 200:
             resp.raise_for_status()
