@@ -110,6 +110,7 @@ def sniff_version(text):
 TAG_SNIPS = [
     ('bitnami', b'<div id="bitnami-banner" '),
     ('edunext', b' href="https://www.edunext.co" '),
+    ('overlimit', b'This site is temporarily restricted because the account limits have been reached.'),    # eduNEXT, overlimit.
     ('appsembler', b' href="https://www.appsembler.com" '),
     ('raccoongang', b' href="https://raccoongang.com" '),
     ('opencraft', b'static/simple-theme/images/logo.85cf838f1fea.png'),
