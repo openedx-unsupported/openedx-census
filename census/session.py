@@ -84,7 +84,7 @@ class Saver:
 
     def save(self, url, text, response):
         os.makedirs(self.dir, exist_ok=True)
-        if 0:
+        if 1:
             num = next(self.numbers)
             ext = re.split(r"[+/]", response.content_type)[-1]
             save_name = f"{num:06d}.{ext}"
