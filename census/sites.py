@@ -73,7 +73,10 @@ class Site:
         (rb' data-cf-settings="[0-9a-fA-F]+-\|', rb' data-cf-settings="XXX-\|'),
     ]
 
-    def add_to_fingerprint(self, text):
+    def process_text(self, text, type="html"):
+        """
+        Text retrieved from the site, processed for a few things.
+        """
         # Remove noise from the fingerprint.
         lines = text.splitlines(keepends=True)
         lines = [l for l in lines if not any(frag in l for frag in self.IGNORE_LINE_FRAGMENTS)]
@@ -82,10 +85,11 @@ class Site:
         lines.append(self.fingerprint.encode('ascii'))
         text = b''.join(lines)
         self.fingerprint = fingerprint(text)
-        version = sniff_version(text)
-        if version:
-            self.version = version
-        self.tags.update(sniff_tags(self.url, text))
+        if type == "html":
+            version = sniff_version(text)
+            if version:
+                self.version = version
+            self.tags.update(sniff_tags(self.url, text))
 
     def should_update(self):
         """Should we update this site in the database?"""

@@ -22,7 +22,7 @@ from census.site_patterns import matches, matches_any
 async def json_total_value_parser(site, session, rel_url, key):
     url = site_url(site, rel_url)
     text = await session.text_from_url(url)
-    site.add_to_fingerprint(text)
+    site.process_text(text)
     data = json.loads(text)
     return data[key]
 
@@ -36,7 +36,7 @@ async def regex_extract_parser(site, session, rel_url, pattern):
 async def openedu_tw_parser(site, session):
     url = "https://www.openedu.tw/rest/courses/query"
     text = await session.text_from_url(url)
-    site.add_to_fingerprint(text)
+    site.process_text(text)
     data = json.loads(text)
     return len(data)
 
@@ -44,7 +44,7 @@ async def openedu_tw_parser(site, session):
 async def openedu_ru_parser(site, session):
     url = site_url(site, "/course/")
     text = await session.text_from_url(url)
-    site.add_to_fingerprint(text)
+    site.process_text(text)
     count = element_by_css(text, "span#courses-found")
     assert " кур" in count.text
     return int(count.text.split()[0])
@@ -53,13 +53,13 @@ async def openedu_ru_parser(site, session):
 async def gacco_parser(site, session):
     url = site_url(site, "/data/course/gacco_list.json")
     text = await session.text_from_url(url)
-    site.add_to_fingerprint(text)
+    site.process_text(text)
     data = json.loads(text)
     count = len(data["opened_courses"])
 
     url = site_url(site, "/data/course/gacco_archive.json")
     text = await session.text_from_url(url)
-    site.add_to_fingerprint(text)
+    site.process_text(text)
     data = json.loads(text)
     count += len(data["archived_courses"])
     return count
@@ -78,7 +78,7 @@ async def gacco_parser(site, session):
 async def count_elements_parser(site, session, rel_url, css):
     url = site_url(site, rel_url)
     text = await session.text_from_url(url)
-    site.add_to_fingerprint(text)
+    site.process_text(text)
     elts = elements_by_css(text, css)
     count = len(elts)
     return count
@@ -87,7 +87,7 @@ async def count_elements_parser(site, session, rel_url, css):
 async def millionlights_parser(site, session):
     url = site_url(site, "/Course/AllCourses")
     text = await session.text_from_url(url)
-    site.add_to_fingerprint(text)
+    site.process_text(text)
     # Find the language-faceted results, and add up their parenthesized
     # numbers.
     elts = elements_by_xpath(text, "//a[contains(text(), 'English (')]/ancestor::ul//a")
@@ -101,7 +101,7 @@ async def millionlights_parser(site, session):
 async def enlightme_parser(site, session):
     url = site_url(site, "/courses/")
     text = await session.text_from_url(url)
-    site.add_to_fingerprint(text)
+    site.process_text(text)
     elt = element_by_css(text, ".course-index span")
     result = parse_text("Showing 1-10 of {:d} results", elt.text)
     return result[0]
@@ -110,7 +110,7 @@ async def enlightme_parser(site, session):
 async def hku_hk_parser(site, session):
     url = site_url(site, "/mbbs_admin/public/downloadMbbsJsonFile")
     text = await session.text_from_url(url)
-    site.add_to_fingerprint(text)
+    site.process_text(text)
     data = json.loads(text)
     count = len(data)
     return count
@@ -119,7 +119,7 @@ async def hku_hk_parser(site, session):
 async def hku_nursing_parser(site, session):
     url = site_url(site, "/nurs_admin/public/downloadNursJsonFile")
     text = await session.text_from_url(url)
-    site.add_to_fingerprint(text)
+    site.process_text(text)
     data = json.loads(text)
     count = len(data)
     return count
@@ -128,7 +128,7 @@ async def hku_nursing_parser(site, session):
 async def learning_hku_parser(site, session):
     url = site_url(site, "/catalog/all-courses/")
     text = await session.text_from_url(url)
-    site.add_to_fingerprint(text)
+    site.process_text(text)
     elt = element_by_css(text, "li#course-all span")
     count = int(elt.text)
     return count
@@ -137,7 +137,7 @@ async def learning_hku_parser(site, session):
 async def campus_il_parser(site, session):
     url = site_url(site, "/course")
     text = await session.text_from_url(url)
-    site.add_to_fingerprint(text)
+    site.process_text(text)
     elt = element_by_css(text, "span#add-sum-course")
     count = int(elt.text)
     return count
@@ -146,7 +146,7 @@ async def campus_il_parser(site, session):
 async def iitbombayx_parser(site, session):
     url = site_url(site, "/courses")
     text = await session.text_from_url(url)
-    site.add_to_fingerprint(text)
+    site.process_text(text)
     elts = elements_by_css(text, "#block-timeline-2 .facet-item__count")
     count = 0
     for elt in elts:
@@ -157,7 +157,7 @@ async def iitbombayx_parser(site, session):
 async def edraak_org_parser(site, session):
     url = site_url(site, "/en/courses/")
     text = await session.text_from_url(url)
-    site.add_to_fingerprint(text)
+    site.process_text(text)
     elts = elements_by_css(text, "aside.all-courses div.course span")
     count = 0
     for elt in elts:
@@ -168,7 +168,7 @@ async def edraak_org_parser(site, session):
 async def edcast_org_parser(site, session):
     url = site_url(site, "/search")
     text = await session.text_from_url(url)
-    site.add_to_fingerprint(text)
+    site.process_text(text)
     h4 = element_by_css(text, ".search-navigation-row h4")
     result = parse_text("All Courses ({:d} matches)", h4.text)
     return result[0]
@@ -180,7 +180,7 @@ async def cognitiveclass_parser(site, session):
     count = 0
     while True:
         text = await session.text_from_url(url)
-        site.add_to_fingerprint(text)
+        site.process_text(text)
         elts = elements_by_css(text, "article.course.card")
         count += len(elts)
         # Find the a element with '>' as the text, get its href.
@@ -195,7 +195,7 @@ async def cognitiveclass_parser(site, session):
 async def entuze_parser(site, session):
     url = site_url(site, "/course_packages/")
     text = await session.text_from_url(url)
-    site.add_to_fingerprint(text)
+    site.process_text(text)
     elt = element_by_css(text, "div#discovery-message")
     result = parse_text("Viewing {:d} courses", elt.text)
     return result[0]
@@ -210,7 +210,7 @@ async def gotoclass_parser(site, session):
     count = 0
     while True:
         text = await session.text_from_url(url)
-        site.add_to_fingerprint(text)
+        site.process_text(text)
         elts = elements_by_css(text, "div.course-block")
         count += len(elts)
         next_a = elements_by_css(text, "a.next.page-numbers")
@@ -223,7 +223,7 @@ async def gotoclass_parser(site, session):
 @matches("openu.kz")
 async def openu_kz_parser(site, session):
     text = await session.text_from_url(site.url)
-    site.add_to_fingerprint(text)
+    site.process_text(text)
     stat_elt = elements_by_css(text, ".statistics-block .statistics-block__value")[0]
     count = int(stat_elt.text)
     return count
@@ -236,7 +236,7 @@ async def numfocus_parser(site, session):
     while urls:
         url = urls.popleft()
         text = await session.text_from_url(url)
-        site.add_to_fingerprint(text)
+        site.process_text(text)
 
         # Look for courses.
         tiles = elements_by_css(text, ".course-rec-3")
@@ -259,7 +259,7 @@ async def edx_org_parser(site, session):
     count = 0
     while True:
         text = await session.text_from_url(url)
-        site.add_to_fingerprint(text)
+        site.process_text(text)
         data = json.loads(text)
         objs = data['objects']['results']
         count += len(objs)
@@ -318,7 +318,7 @@ async def count_tiles(url, site, session):
             site.course_ids[course_id] += 1
     except Exception:
         pass
-    site.add_to_fingerprint(text)
+    site.process_text(text)
     return count
 
 @matches_any
@@ -357,7 +357,7 @@ async def edx_search_post(site, session):
         # The JSON has a "took" key, the time to respond, which we don't
         # want in the fingerprint.
         del data['took']
-        site.add_to_fingerprint(json.dumps(data, sort_keys=True).encode('utf8'))
+        site.process_text(json.dumps(data, sort_keys=True).encode('utf8'))
         url0 = None
     return count
 
@@ -377,7 +377,7 @@ async def home_page_full_of_tiles(site, session):
 async def studio_to_tiles(site, session):
     url = site_url(site, "/")
     text = await session.text_from_url(url)
-    site.add_to_fingerprint(text)
+    site.process_text(text)
     lms_links = elements_by_css(text, "#lms-link")
     if len(lms_links) == 1:
         lms_link = lms_links[0].get("href")
