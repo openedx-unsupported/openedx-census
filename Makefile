@@ -50,21 +50,33 @@ $(NEW_REFS): $(ALL_REFS)
 	@# date -v-2m    gives us the date of two months ago, so we can see the new referrers.
 	comm -13 refs/history/$$(ls -1 refs/history | awk '{if ($$0 < "referers_'$$(date -v-2m '+%Y%m%d')'.txt") print}' | tail -1) $(ALL_REFS) > $(NEW_REFS)
 
-new_refs: $(NEW_REFS)		## scrape new referrers in the last 2 months
+new_refs: $(NEW_REFS) new_scrape new_html	## scrape new referrers in the last 2 months
+
+new_scrape:
 	census scrape --in $(NEW_REFS) --out $(NEW_PICKLE)
+
+new_html:
 	census html --in $(NEW_PICKLE) --out html/new-refs.html --skip-none --only-new
+	census html --in $(NEW_PICKLE) --out html/new-refs-full.html --skip-none --only-new --full
 
 ALL_PICKLE = state/all-refs.pickle
 
-all_refs:			## scrape all referrers ever
+all_refs: all_scrape all_html	## scrape all referrers ever
+
+all_scrape:
 	census scrape --in $(ALL_REFS) --out $(ALL_PICKLE)
+
+all_html:
 	census html --in $(ALL_PICKLE) --out html/all-refs.html --skip-none --only-new
+	census html --in $(ALL_PICKLE) --out html/all-refs-full.html --skip-none --only-new --full
 	census html --in $(ALL_PICKLE) --out html/aall-refs.html --skip-none
+	census html --in $(ALL_PICKLE) --out html/aall-refs-full.html --skip-none --full
 
 known_sites:			## scrape the known sites
 	census scrape --gone
 	census summary
-	census html
+	census html --out html/sites.html
+	census html --out html/sites-full.html --full
 	census json
 
 post:				## update the stats site with the latest known_sites scrape

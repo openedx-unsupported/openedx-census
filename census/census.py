@@ -266,7 +266,8 @@ def summarize(sites):
               help='The HTML file to write')
 @click.option('--skip-none', is_flag=True, help="Don't include sites with no count")
 @click.option('--only-new', is_flag=True, help="Only include sites we think are new")
-def html(in_file, out_file, skip_none, only_new):
+@click.option('--full', is_flag=True, help="Include courses, orgs, etc")
+def html(in_file, out_file, skip_none, only_new, full):
     """Write an HTML report."""
     with in_file:
         sites = pickle.load(in_file)
@@ -276,10 +277,12 @@ def html(in_file, out_file, skip_none, only_new):
 
     # Prep data for reporting.
     old, new = totals(sites)
-    all_courses, all_orgs, all_course_ids = courses_and_orgs(sites)
-
-    with open("course-ids.txt", "w") as f:
-        f.write("".join(i + "\n" for i in sorted(all_course_ids)))
+    if full:
+        all_courses, all_orgs, all_course_ids = courses_and_orgs(sites)
+        with open("course-ids.txt", "w") as f:
+            f.write("".join(i + "\n" for i in sorted(all_course_ids)))
+    else:
+        all_courses = all_orgs = None
 
     known_domains = {domain_from_url(site.url) for site in read_sites_csv(SITES_CSV)}
     with open(ALIASES_TXT) as aliases:
@@ -299,7 +302,7 @@ def write_json(in_file):
 
     # Prep data for reporting.
     sites_descending = sorted(sites, key=lambda s: s.latest_courses, reverse=True)
-    all_courses, all_orgs, all_course_ids = courses_and_orgs(sites)
+    all_courses, _, _ = courses_and_orgs(sites)
     json_update(sites_descending, all_courses, include_overcount=True)
 
 
