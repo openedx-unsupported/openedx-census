@@ -7,8 +7,8 @@ import opaque_keys
 import opaque_keys.edx.keys
 
 from census.helpers import (
-    domain_from_url, is_chaff_domain, is_known, fingerprint, sniff_version,
-    sniff_tags,
+    domain_from_url, is_chaff_domain, is_known, calc_fingerprint, sniff_version,
+    sniff_tags, emails_in_text
 )
 
 @attr.s
@@ -73,23 +73,28 @@ class Site:
         (rb' data-cf-settings="[0-9a-fA-F]+-\|', rb' data-cf-settings="XXX-\|'),
     ]
 
-    def process_text(self, text, type="html"):
+    def process_text(self, text, fingerprint=True, type="html", emails=True):
         """
         Text retrieved from the site, processed for a few things.
         """
-        # Remove noise from the fingerprint.
-        lines = text.splitlines(keepends=True)
-        lines = [l for l in lines if not any(frag in l for frag in self.IGNORE_LINE_FRAGMENTS)]
-        for pat, repl in self.REMOVABLE_NOISE:
-            lines = [re.sub(pat, repl, l) for l in lines]
-        lines.append(self.fingerprint.encode('ascii'))
-        text = b''.join(lines)
-        self.fingerprint = fingerprint(text)
+        if fingerprint:
+            # Remove noise from the fingerprint.
+            lines = text.splitlines(keepends=True)
+            lines = [l for l in lines if not any(frag in l for frag in self.IGNORE_LINE_FRAGMENTS)]
+            for pat, repl in self.REMOVABLE_NOISE:
+                lines = [re.sub(pat, repl, l) for l in lines]
+            lines.append(self.fingerprint.encode('ascii'))
+            text = b''.join(lines)
+            self.fingerprint = calc_fingerprint(text)
         if type == "html":
             version = sniff_version(text)
             if version:
                 self.version = version
             self.tags.update(sniff_tags(self.url, text))
+        if emails:
+            with open("save/emails.txt", "a") as f:
+                for email in emails_in_text(text):
+                    print(email.decode("ascii"), file=f)
 
     def should_update(self):
         """Should we update this site in the database?"""

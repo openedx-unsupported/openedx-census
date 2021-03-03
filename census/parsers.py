@@ -296,6 +296,8 @@ OPENEDX_SNIPS = [b"open edx", b"openedx", b"edx.org", b"edx-theme-codebase"]
 
 async def count_tiles(url, site, session):
     text = await session.text_from_url(url)
+    # The text could have useful info, but isn't yet the page we want to fingerprint.
+    site.process_text(text, fingerprint=False)
     elts = elements_by_css(text, ".courses ul.courses-listing > li")
     count = len(elts)
     if count == 0:
@@ -357,7 +359,9 @@ async def edx_search_post(site, session):
         # The JSON has a "took" key, the time to respond, which we don't
         # want in the fingerprint.
         del data['took']
-        site.process_text(json.dumps(data, sort_keys=True).encode('utf8'))
+        jtext = json.dumps(data, sort_keys=True).encode('utf8')
+        # Search results have instructor emails, which we don't want.
+        site.process_text(jtext, type="json", emails=False)
         url0 = None
     return count
 

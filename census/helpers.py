@@ -60,7 +60,7 @@ def parse_text(pattern, text):
         raise ValueError(f"Couldn't apply pattern {pattern!r} to {text!r}")
     return result
 
-def fingerprint(text):
+def calc_fingerprint(text):
     """Return a hex string that fingerprints `text`."""
     return hashlib.sha1(text).hexdigest()
 
@@ -138,3 +138,39 @@ def sniff_tags(url, text):
     for tag, end in TAG_URL_ENDS:
         if url.endswith(end):
             yield tag
+
+
+EMAIL_RX = br"[\w_.-]+@[\w_.-]+\.[\w_.-]+"
+
+NOT_EMAIL_RX = br"""(?x)
+    @v?[.\d]+$ |        # for ex: fancybox@3.5.7
+    \.(git|jpg|jpeg|jfif|png|pdf|webp|js|css|mp4)$ |    # content files
+    sentry\.io$ |       # a domain with bogus emails
+    ^block@             # course content
+    """
+
+REMOVE_PREFIXES = (
+    b"u003E",       # It's embedded in JSON.
+)
+
+REMOVE_SUFFIXES = (
+    b".",           # It's at the end of a sentence.
+)
+
+def emails_in_text(text):
+    """Yield all the email addresses in `text`."""
+    for ematch in re.finditer(EMAIL_RX, text):
+        email = ematch[0]
+        if re.search(NOT_EMAIL_RX, email):
+            continue
+        for pref in REMOVE_PREFIXES:
+            if email.startswith(pref):
+                email = email[len(pref):]
+                break
+        for suff in REMOVE_SUFFIXES:
+            if email.endswith(suff):
+                email = email[:-len(suff)]
+                break
+        if email.endswith(b"."):
+            email = email[:-1]
+        yield email

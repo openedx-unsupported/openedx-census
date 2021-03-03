@@ -6,6 +6,7 @@ import collections
 import itertools
 import json
 import logging
+import os
 import pickle
 import pprint
 import re
@@ -84,6 +85,8 @@ async def parse_site(site, session_factory):
                     attempt.error = f"{exc.__class__.__name__}: {exc}"
                     err = str(exc) or exc.__class__.__name__
                 except Exception as exc:
+                    #print(f"Exception: {exc!r}, {exc}, {exc.__class__.__name__}")
+                    #print(traceback.format_exc())
                     attempt.error = traceback.format_exc()
                     err = str(exc) or exc.__class__.__name__
                 else:
@@ -198,6 +201,8 @@ def scrape(in_file, log_level, gone, site, summarize, save, out_file, timeout, s
         print("1 site")
     else:
         print(f"{len(sites)} sites")
+
+    os.makedirs("save", exist_ok=True)
 
     # SCRAPE!
     session_kwargs = {
