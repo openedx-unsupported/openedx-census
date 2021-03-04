@@ -1,5 +1,7 @@
 \.amazonaws.com$
+\.awsglobalaccelerator.com$
 \.google\.
+\.translate\.goog$
 sandbox.*\.opencraft\.hosting$
 sandbox.*\.opencraft\.com$
 (discovery-|ecommerce-|preview-).*\.opencraft\.hosting$
