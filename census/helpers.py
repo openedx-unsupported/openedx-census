@@ -140,37 +140,28 @@ def sniff_tags(url, text):
             yield tag
 
 
-EMAIL_RX = br"[\w_.-]+@[\w_.-]+\.[\w_.-]+"
+EMAIL_RX = br"[\w_.-]+@[\w.-]+\.[\w.-]+"
 
 NOT_EMAIL_RX = br"""(?x)
     @v?[.\d]+$ |        # for ex: fancybox@3.5.7
-    \.(git|jpg|jpeg|jfif|png|pdf|webp|js|css|mp4)$ |    # content files
+    \.(gif|jpg|jpeg|jfif|png|pdf|webp|js|css|mp4)$ |    # content files
     sentry\.io$ |       # a domain with bogus emails
-    ^block@             # course content
+    ^block@ |           # course content
+    @(domain.com|edx.org|example.com)$
+                        # placeholder domains
     """
 
-REMOVE_PREFIXES = (
-    b"u003E",       # It's embedded in JSON.
-)
-
-REMOVE_SUFFIXES = (
-    b".",           # It's at the end of a sentence.
-)
+CLEAN_EMAIL_RXS = [
+    br"^u003E",         # email embedded in JSON.
+    br"[-.]+$",         # end of sentence, or in an HTML comment.
+]
 
 def emails_in_text(text):
     """Yield all the email addresses in `text`."""
     for ematch in re.finditer(EMAIL_RX, text):
         email = ematch[0]
+        for rx in CLEAN_EMAIL_RXS:
+            email = re.sub(rx, b"", email)
         if re.search(NOT_EMAIL_RX, email):
             continue
-        for pref in REMOVE_PREFIXES:
-            if email.startswith(pref):
-                email = email[len(pref):]
-                break
-        for suff in REMOVE_SUFFIXES:
-            if email.endswith(suff):
-                email = email[:-len(suff)]
-                break
-        if email.endswith(b"."):
-            email = email[:-1]
         yield email

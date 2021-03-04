@@ -374,6 +374,13 @@ async def courses_page_full_of_tiles(site, session):
 async def home_page_full_of_tiles(site, session):
     return await count_tiles(site.url, site, session)
 
+@matches_any
+async def contact_page(site, session):
+    url = site_url(site, "/contact")
+    text = await session.text_from_url(url)
+    site.process_text(text, fingerprint=False, emails=True)
+    raise GotZero("Not looking for courses on /contact")
+
 # This isn't ready yet.
 # Studio has a link to its LMS.  This could help us find sites that aren't
 # displaying the powered-by logo on the LMS.

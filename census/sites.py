@@ -46,6 +46,9 @@ class Site:
     version = attr.ib(default=None)
     tags = attr.ib(factory=set)
 
+    # Other random things from the sitee
+    other_info = attr.ib(factory=list)
+
     def __eq__(self, other):
         return self.url == other.url
 
@@ -94,7 +97,9 @@ class Site:
         if emails:
             with open("save/emails.txt", "a") as f:
                 for email in emails_in_text(text):
-                    print(email.decode("ascii"), file=f)
+                    email = email.decode("ascii")
+                    print(email, file=f)
+                    self.other_info.append(email)
 
     def should_update(self):
         """Should we update this site in the database?"""
@@ -153,6 +158,9 @@ class HashedSite:
 
     def tags(self):
         return set(t for site in self.sites for t in site.tags)
+
+    def other_info(self):
+        return set(inf for site in self.sites for inf in site.other_info)
 
     def best_url(self):
         site_urls = [site.url for site in self.sites]

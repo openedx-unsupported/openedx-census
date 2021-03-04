@@ -60,6 +60,9 @@ CSS = """\
         border-radius: 1em;
         padding: 0 .5em;
     }
+    .info {
+        margin: 0 0 0 1.5em;
+    }
 """
 
 
@@ -165,6 +168,9 @@ def write_hashed_site(hashed_site, writer, known_domains):
     )
     for site in hashed_site.sites:
         write_site(site, writer, known_domains)
+    info = hashed_site.other_info()
+    if info:
+        writer.write(f"<p class='info'><b>Info:</b> {'; '.join(info)}</p>")
     writer.end_section()
 
 def write_site(site, writer, known_domains):
