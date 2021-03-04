@@ -101,7 +101,7 @@ async def parse_site(site, session_factory):
                         break
 
             if success:
-                site.current_courses = max(attempt.courses for attempt in site.tried if attempt.courses is not None)
+                site.current_courses = site.attempt_course_count()
                 if site.is_gone:
                     char = 'B'
                 else:

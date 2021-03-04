@@ -136,6 +136,10 @@ class Site:
             add_tag(self.version, "version")
         return tags
 
+    def attempt_course_count(self):
+        """What's the course count for the attempts so far?"""
+        return max((attempt.courses for attempt in self.tried if attempt.courses is not None), default=None)
+
 
 @attr.s()
 class HashedSite:
