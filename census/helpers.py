@@ -143,7 +143,7 @@ def sniff_tags(url, text):
 EMAIL_RX = br"[\w_.-]+@[\w.-]+\.[\w.-]+"
 
 NOT_EMAIL_RX = br"""(?x)
-    @v?[.\d]+$ |        # for ex: fancybox@3.5.7
+    @v?\d+\.\d+\.\d+ |  # for ex: fancybox@3.5.7-beta1
     \.(gif|jpg|jpeg|jfif|png|pdf|webp|js|css|mp4)$ |    # content files
     sentry\.io$ |       # a domain with bogus emails
     ^block@ |           # course content
