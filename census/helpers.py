@@ -89,6 +89,10 @@ def is_chaff_domain(domain):
     parts = re.split(r"[.-]", domain)
     return any(part.rstrip("0123456789") in CHAFF_WORDS for part in parts)
 
+def hostname(url):
+    host = urllib.parse.urlparse(url).netloc.partition(":")[0].lower()
+    return host
+
 VERSION_SNIPS = [
     ('ginkgo', b'<a class="nav-skip sr-only sr-only-focusable" href="#main">'),
     ('ficus', b'DateUtilFactory.transform(iterationKey=".localized_datetime");'),

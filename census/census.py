@@ -72,7 +72,7 @@ def all_have_snippets(errors, snippets):
 
 async def parse_site(site, session_factory):
     for verify_ssl in [True, False]:
-        async with session_factory.new(verify_ssl=verify_ssl) as session:
+        async with session_factory.new(verify_ssl=verify_ssl, listeners=[site]) as session:
             start = time.time()
             errs = []
             success = False
@@ -335,6 +335,8 @@ def show_text_report(sites):
         tags = ", ".join(t for t, s in site.styled_tags())
         if tags:
             print(f"    [{tags}]")
+        if site.other_info:
+            print(f"    Info: {'; '.join(set(site.other_info))}")
 
 def json_update(sites, all_courses, include_overcount=False):
     """Write a JSON file for uploading to the stats site.

@@ -15,7 +15,7 @@ from census.helpers import HttpError
 log = logging.getLogger(__name__)
 
 class SmartSession:
-    def __init__(self, sem, timeout=20, headers=None, save=False, saver=None, **kwargs):
+    def __init__(self, sem, timeout=20, headers=None, save=False, saver=None, listeners=None, **kwargs):
         self.sem = sem
         self.timeout = timeout
         self.kwargs = kwargs
@@ -23,6 +23,7 @@ class SmartSession:
         self.headers = {}
         self.save = save
         self.saver = saver
+        self.listeners = listeners
 
     async def __aenter__(self):
         await self.session.__aenter__()
@@ -69,6 +70,10 @@ class SmartSession:
 
         if self.saver and (save or self.save):
             self.saver(url, text, response)
+
+        for listener in self.listeners:
+            listener.got_response(url, response)
+
         return text
 
     async def real_url(self, url):

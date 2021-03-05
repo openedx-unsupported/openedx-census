@@ -8,7 +8,7 @@ import opaque_keys.edx.keys
 
 from census.helpers import (
     domain_from_url, is_chaff_domain, is_known, calc_fingerprint, sniff_version,
-    sniff_tags, emails_in_text
+    sniff_tags, emails_in_text, hostname
 )
 
 @attr.s
@@ -17,6 +17,7 @@ class Attempt:
     strategy = attr.ib(default="")
     courses = attr.ib(default=None)
     error = attr.ib(default=None)
+
 
 
 @attr.s(cmp=False, frozen=False)
@@ -46,7 +47,7 @@ class Site:
     version = attr.ib(default=None)
     tags = attr.ib(factory=set)
 
-    # Other random things from the sitee
+    # Other random things from the site
     other_info = attr.ib(factory=list)
 
     def __eq__(self, other):
@@ -100,6 +101,11 @@ class Site:
                     email = email.decode("ascii")
                     print(email, file=f)
                     self.other_info.append(email)
+
+    def got_response(self, url, response):
+        actual_host = hostname(str(response.url))
+        if hostname(url) != actual_host:
+            self.other_info.append(actual_host)
 
     def should_update(self):
         """Should we update this site in the database?"""
