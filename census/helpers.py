@@ -119,6 +119,7 @@ TAG_SNIPS = [
     ('raccoongang', b' href="https://raccoongang.com" '),
     ('opencraft', b'static/simple-theme/images/logo.85cf838f1fea.png'),
     ('ibl', b'static/poweredibl.png"'),
+    ('ibl', b'/static/iblx-lms/'),
     ('tutor', b'docs.tutor.overhang.io'),
     ('indigo', b'type="image/x-icon" href="/static/indigo3/images/favicon'),
     ('aulasneo', b'aulasneo'),
