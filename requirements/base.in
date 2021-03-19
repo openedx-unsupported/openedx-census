@@ -6,6 +6,7 @@ aiodns
 asyncio_extras
 async_timeout
 attrs
+certifi
 click
 cssselect
 edx-opaque-keys

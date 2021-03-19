@@ -6,7 +6,7 @@
 #
 aiodns==2.0.0
     # via -r requirements/base.in
-aiohttp==3.7.3
+aiohttp==3.7.4.post0
     # via -r requirements/base.in
 async-generator==1.10
     # via asyncio-extras
@@ -21,10 +21,12 @@ attrs==20.3.0
     #   -r requirements/base.in
     #   aiohttp
 certifi==2020.12.5
-    # via requests
-cffi==1.14.4
+    # via
+    #   -r requirements/base.in
+    #   requests
+cffi==1.14.5
     # via pycares
-chardet==3.0.4
+chardet==4.0.0
     # via
     #   aiohttp
     #   requests
@@ -52,17 +54,17 @@ pycares==3.1.1
     # via aiodns
 pycparser==2.20
     # via cffi
-pymongo==3.11.2
+pymongo==3.11.3
     # via edx-opaque-keys
 requests==2.25.1
     # via -r requirements/base.in
 stevedore==3.3.0
     # via edx-opaque-keys
-tqdm==4.56.0
+tqdm==4.59.0
     # via -r requirements/base.in
 typing-extensions==3.7.4.3
     # via aiohttp
-urllib3==1.26.3
+urllib3==1.26.4
     # via requests
 yarl==1.6.3
     # via aiohttp
