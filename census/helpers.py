@@ -21,6 +21,9 @@ class HttpError(ScrapeFail):
     """Raised to nicely handle HTTP errors."""
     pass
 
+class NotTrying(Exception):
+    """When a parser decides to skip parsing."""
+    pass
 
 def site_url(site, rel_url):
     """Compose an absolute URL from a site and a relative url."""

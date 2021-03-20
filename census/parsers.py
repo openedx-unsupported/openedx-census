@@ -11,7 +11,7 @@ from census.helpers import (
     site_url,
     parse_text,
     element_by_css, elements_by_css, elements_by_xpath,
-    GotZero,
+    GotZero, NotTrying,
 )
 from census.site_patterns import matches, matches_any
 
@@ -378,13 +378,13 @@ async def home_page_full_of_tiles(site, session):
 async def contact_page(site, session):
     current_courses = site.attempt_course_count()
     if current_courses is None:
-        raise GotZero("No point trying /contact")
+        raise NotTrying("No point trying /contact")
 
     # Only try the contact page if we got some data from the site.
     url = site_url(site, "/contact")
     text = await session.text_from_url(url)
     site.process_text(text, fingerprint=False, emails=True)
-    raise GotZero("Not looking for courses on /contact")
+    raise NotTrying("Not looking for courses on /contact")
 
 # This isn't ready yet.
 # Studio has a link to its LMS.  This could help us find sites that aren't
@@ -398,4 +398,4 @@ async def studio_to_tiles(site, session):
     if len(lms_links) == 1:
         lms_link = lms_links[0].get("href")
         return await count_tiles(lms_link, site, session)
-    raise GotZero("Not studio I guess")
+    raise NotTrying("Not studio I guess")

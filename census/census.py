@@ -19,7 +19,7 @@ import click
 import requests
 import tqdm
 
-from census.helpers import ScrapeFail, domain_from_url
+from census.helpers import NotTrying, ScrapeFail, domain_from_url
 from census.html_report import html_report
 from census.keys import username, password
 from census.session import SessionFactory
@@ -81,6 +81,8 @@ async def parse_site(site, session_factory):
                 err = None
                 try:
                     attempt.courses = await parser(site, session, *args, **kwargs)
+                except NotTrying as exc:
+                    attempt.error = str(exc)
                 except ScrapeFail as exc:
                     attempt.error = f"{exc.__class__.__name__}: {exc}"
                     err = str(exc) or exc.__class__.__name__
