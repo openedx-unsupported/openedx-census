@@ -68,9 +68,9 @@ all_scrape:
 
 all_html:
 	census html --in $(ALL_PICKLE) --out html/all-refs.html --skip-none --only-new
-	census html --in $(ALL_PICKLE) --out html/all-refs-full.html --skip-none --only-new --full
+	census html --in $(ALL_PICKLE) --out html/all-refs-full.html --only-new --full
 	census html --in $(ALL_PICKLE) --out html/aall-refs.html --skip-none
-	census html --in $(ALL_PICKLE) --out html/aall-refs-full.html --skip-none --full
+	census html --in $(ALL_PICKLE) --out html/aall-refs-full.html --full
 
 known_sites:			## scrape the known sites
 	census scrape --gone
