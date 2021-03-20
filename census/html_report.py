@@ -101,8 +101,9 @@ def html_report(out_file, sites, old, new, all_courses=None, all_orgs=None, know
 
     hashed_sites_by_fp = collections.defaultdict(HashedSite)
     for site in sites:
-        hashed_site = hashed_sites_by_fp[site.fingerprint]
-        hashed_site.fingerprint = site.fingerprint
+        fp = site.fingerprint or site.url
+        hashed_site = hashed_sites_by_fp[fp]
+        hashed_site.fingerprint = fp
         hashed_site.version = site.version
         hashed_site.sites.append(site)
 
