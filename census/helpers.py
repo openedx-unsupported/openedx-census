@@ -126,6 +126,7 @@ TAG_SNIPS = [
     ('tutor', b'docs.tutor.overhang.io'),
     ('indigo', b'type="image/x-icon" href="/static/indigo3/images/favicon'),
     ('aulasneo', b'aulasneo'),
+    ('angular', b'<noscript>Please enable JavaScript to continue using this application.</noscript>'),
 ]
 
 TAG_URL_ENDS = [
