@@ -415,8 +415,11 @@ def post(site):
 def bulkcreate(site):
     """Upload a YAML file to create a number of sites.
 
-    The yaml is like this:
+    The bulk.yaml file is like this:
 
+    - url: https://loveandpowerinshakespearesplays.edunext.io/
+      course_count: 6
+      notes: edunext
     - url: https://lms.cursate.org
       course_count: 4
       language: Spanish
