@@ -300,6 +300,19 @@ def html(in_file, out_file, skip_none, only_new, full):
     html_report(out_file, sites, old, new, all_courses, all_orgs, known_domains=known_domains, only_new=only_new)
 
 
+@cli.command()
+@click.option('--in', 'in_file', type=click.File('rb'), default=SITES_PICKLE)
+def emails(in_file):
+    """Write the emails found."""
+    with in_file:
+        sites = pickle.load(in_file)
+
+    emails = set()
+    for site in sites:
+        emails.update(site.emails)
+    print("\n".join(sorted(emails)))
+
+
 @cli.command('json')
 @click.option('--in', 'in_file', type=click.File('rb'), default=SITES_PICKLE)
 def write_json(in_file):
@@ -337,8 +350,9 @@ def show_text_report(sites):
         tags = ", ".join(t for t, s in site.styled_tags())
         if tags:
             print(f"    [{tags}]")
-        if site.other_info:
-            print(f"    Info: {'; '.join(set(site.other_info))}")
+        other = site.other_info + site.emails
+        if other:
+            print(f"    Info: {'; '.join(set(other))}")
 
 def json_update(sites, all_courses, include_overcount=False):
     """Write a JSON file for uploading to the stats site.

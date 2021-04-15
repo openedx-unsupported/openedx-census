@@ -22,12 +22,12 @@ def test_is_chaff_domain(domain, is_chaff):
     assert is_chaff_domain(domain) == is_chaff
 
 @pytest.mark.parametrize("text, emails", [
-    (b"hello ned@edy.org there", [b"ned@edy.org"]),
+    (b"hello ned@edy.org there", ["ned@edy.org"]),
     (b"hello foo/fancybox@3.5.7/bar there", []),
     (b"my email is ned@edy.org or ned2@edy.org. Write me!",
-        [b"ned@edy.org", b"ned2@edy.org"]),
+        ["ned@edy.org", "ned2@edy.org"]),
     (b"<--joe@blow.com--> email:%20bill@gates.com.",
-        [b"joe@blow.com", b"bill@gates.com"]),
+        ["joe@blow.com", "bill@gates.com"]),
 ])
 def test_emails_in_text(text, emails):
     assert list(emails_in_text(text)) == emails

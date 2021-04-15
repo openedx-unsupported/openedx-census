@@ -48,6 +48,7 @@ class Site:
     tags = attr.ib(factory=set)
 
     # Other random things from the site
+    emails = attr.ib(factory=list)
     other_info = attr.ib(factory=list)
 
     def __eq__(self, other):
@@ -96,11 +97,7 @@ class Site:
                 self.version = version
             self.tags.update(sniff_tags(self.url, text))
         if emails:
-            with open("save/emails.txt", "a") as f:
-                for email in emails_in_text(text):
-                    email = email.decode("ascii")
-                    print(email, file=f)
-                    self.other_info.append(email)
+            self.emails.extend(emails_in_text(text))
 
     def got_response(self, url, response):
         actual_host = hostname(str(response.url))

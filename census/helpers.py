@@ -179,4 +179,4 @@ def emails_in_text(text):
             email = re.sub(rx, b"", email)
         if re.search(NOT_EMAIL_RX, email):
             continue
-        yield email
+        yield email.decode("ascii")
