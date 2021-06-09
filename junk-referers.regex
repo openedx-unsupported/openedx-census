@@ -1,6 +1,7 @@
 \.amazonaws.com$
 \.awsglobalaccelerator.com$
 \.google\.
+[0-9.]+\.bc\.googleusercontent\.com
 \.translate\.goog$
 sandbox.*\.opencraft\.hosting$
 sandbox.*\.opencraft\.com$
