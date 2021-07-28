@@ -11,4 +11,4 @@ census/keys.py
 *.egg-info
 .idea/*
 .tox/*
-
+.DS_Store
