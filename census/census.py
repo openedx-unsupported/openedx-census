@@ -314,7 +314,7 @@ def sheet(in_file, out_file):
     known_domains = get_known_domains()
     hashed_sites = hash_sites_together(sites, known_domains, only_new=True)
 
-    writer = csv.DictWriter(out_file, ["disposition", "url", "courses", "sites", "tags", "aliases"])
+    writer = csv.DictWriter(out_file, ["disposition", "language", "geography", "url", "courses", "sites", "tags", "aliases"])
     writer.writeheader()
     for hashed_site in hashed_sites:
         url = hashed_site.best_url()
@@ -327,6 +327,7 @@ def sheet(in_file, out_file):
             "tags": ", ".join(sorted(tags)),
             "aliases": ", ".join(other_urls),
         })
+    print(f"Wrote {len(hashed_sites)} sites to {out_file.name}")
 
 
 @cli.command()

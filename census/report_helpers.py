@@ -46,5 +46,4 @@ def hash_sites_together(sites, known_domains, only_new=False):
         hashed_sites = new_hashed_sites
 
     hashed_sites = sorted(hashed_sites, key=lambda hs: hs.current_courses() or 0, reverse=True)
-
     return hashed_sites

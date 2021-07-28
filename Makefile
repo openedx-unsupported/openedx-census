@@ -82,6 +82,9 @@ known_sites:			## scrape the known sites
 post:				## update the stats site with the latest known_sites scrape
 	census post
 
+sheet:
+	census sheet --in $(ALL_PICKLE)
+
 ## Requirements maintenance
 
 .PHONY: requirements upgrade test
