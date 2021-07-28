@@ -3,6 +3,7 @@
 
 import asyncio
 import collections
+import csv
 import itertools
 import json
 import logging
@@ -19,26 +20,26 @@ import click
 import requests
 import tqdm
 
-from census.helpers import NotTrying, ScrapeFail, domain_from_url
+from census.helpers import NotTrying, ScrapeFail
 from census.html_report import html_report
 from census.keys import username, password
+from census.report_helpers import get_known_domains, hash_sites_together, sort_sites
 from census.session import SessionFactory
+from census.settings import (
+    STATS_SITE,
+    UPDATE_JSON,
+    SITES_CSV,
+    SITES_PICKLE,
+    MAX_REQUESTS,
+    TIMEOUT,
+    USER_AGENT,
+    )
 from census.sites import Attempt, Site, HashedSite, read_sites_csv, courses_and_orgs, totals, read_sites_flat, overcount
 from census.site_patterns import find_site_functions
 
 # We don't use anything from this module, it just registers all the parsers.
 from census import parsers
 
-
-STATS_SITE = "http://openedxstats.herokuapp.com"
-UPDATE_JSON = "update.json"
-SITES_CSV = "refs/sites.csv"
-SITES_PICKLE = "state/sites.pickle"
-ALIASES_TXT = "refs/aliases.txt"
-
-MAX_REQUESTS = 50
-TIMEOUT = 30
-USER_AGENT = "Open edX census-taker. Tell us about your site: oscm+census@edx.org"
 
 HEADERS = {
     'User-Agent': USER_AGENT,
@@ -266,6 +267,7 @@ def summarize(sites):
             not_chaff_sites.append(hashed_site)
     print(f"Total sites: {len(not_chaff_sites)} not chaff, {len(chaff_sites)} chaff")
 
+
 @cli.command()
 @click.option('--in', 'in_file', type=click.File('rb'), default=SITES_PICKLE,
               help='The sites.pickle file to read')
@@ -291,13 +293,40 @@ def html(in_file, out_file, skip_none, only_new, full):
     else:
         all_courses = all_orgs = None
 
-    known_domains = {domain_from_url(site.url) for site in read_sites_csv(SITES_CSV)}
-    with open(ALIASES_TXT) as aliases:
-        known_domains.update(domain_from_url(line.strip()) for line in aliases)
+    html_report(out_file, sites, old, new, all_courses, all_orgs, only_new=only_new)
 
-    sites = sorted(sites, key=lambda s: s.url.split(".")[::-1])
-    sites = sorted(sites, key=lambda s: s.current_courses or s.latest_courses, reverse=True)
-    html_report(out_file, sites, old, new, all_courses, all_orgs, known_domains=known_domains, only_new=only_new)
+
+@cli.command()
+@click.option('--in', 'in_file', type=click.File('rb'), default=SITES_PICKLE,
+              help='The sites.pickle file to read')
+@click.option('--out', 'out_file', type=click.File('w'), default="html/sites.csv",
+              help='The CSV file to write')
+def sheet(in_file, out_file):
+    """Write a CSV file for importing into a spreadsheet.
+
+    Always skips no-course sites. Only includes new sites.
+    """
+    with in_file:
+        sites = pickle.load(in_file)
+
+    sites = [site for site in sites if site.current_courses is not None]
+
+    known_domains = get_known_domains()
+    hashed_sites = hash_sites_together(sites, known_domains, only_new=True)
+
+    writer = csv.DictWriter(out_file, ["disposition", "url", "courses", "sites", "tags", "aliases"])
+    writer.writeheader()
+    for hashed_site in hashed_sites:
+        url = hashed_site.best_url()
+        other_urls = [site.url for site in hashed_site.sites if site.url != url]
+        tags = {t for site in hashed_site.sites for t, _ in site.styled_tags()}
+        writer.writerow({
+            "url": url,
+            "courses": hashed_site.current_courses(),
+            "sites": len(hashed_site.sites),
+            "tags": ", ".join(sorted(tags)),
+            "aliases": ", ".join(other_urls),
+        })
 
 
 @cli.command()

@@ -3,7 +3,7 @@ from xml.sax.saxutils import escape
 
 from census.helpers import domain_from_url, is_chaff_domain, is_known
 from census.html_writer import HtmlOutlineWriter
-from census.sites import HashedSite
+from census.report_helpers import get_known_domains, hash_sites_together, sort_sites
 
 CSS = """\
     html {
@@ -66,7 +66,9 @@ CSS = """\
 """
 
 
-def html_report(out_file, sites, old, new, all_courses=None, all_orgs=None, known_domains=None, only_new=False):
+def html_report(out_file, sites, old, new, all_courses=None, all_orgs=None, only_new=False):
+    sites = sort_sites(sites)
+    known_domains = get_known_domains()
 
     writer = HtmlOutlineWriter(out_file, css=CSS, title=f"Census: {len(sites)} sites")
     header = f"{len(sites)} sites: {old}"
@@ -99,25 +101,7 @@ def html_report(out_file, sites, old, new, all_courses=None, all_orgs=None, know
             writer.end_section()
         writer.end_section()
 
-    hashed_sites_by_fp = collections.defaultdict(HashedSite)
-    for site in sites:
-        fp = site.fingerprint or site.url
-        hashed_site = hashed_sites_by_fp[fp]
-        hashed_site.fingerprint = fp
-        hashed_site.version = site.version
-        hashed_site.sites.append(site)
-
-    hashed_sites = list(hashed_sites_by_fp.values())
-    new_hashed_sites = []
-    for hashed_site in hashed_sites:
-        if hashed_site.all_chaff():
-            hashed_site.is_new = False
-        else:
-            hashed_site.is_new = not hashed_site.any_known(known_domains)
-        if hashed_site.is_new:
-            new_hashed_sites.append(hashed_site)
-    if only_new:
-        hashed_sites = new_hashed_sites
+    hashed_sites = hash_sites_together(sites, known_domains, only_new)
 
     versions = collections.defaultdict(list)
     tags = collections.defaultdict(list)
@@ -145,7 +129,6 @@ def html_report(out_file, sites, old, new, all_courses=None, all_orgs=None, know
     writer.end_section()
 
     writer.start_section(f"<p>Hashed: {len(hashed_sites)}</p>")
-    hashed_sites = sorted(hashed_sites, key=lambda hs: hs.current_courses() or 0, reverse=True)
     for hashed_site in hashed_sites:
         write_hashed_site(hashed_site, writer, known_domains)
     writer.end_section()
@@ -171,7 +154,7 @@ def write_hashed_site(hashed_site, writer, known_domains):
         write_site(site, writer, known_domains)
     info = hashed_site.other_info()
     if info:
-        writer.write(f"<p class='info'><b>Info:</b> {'; '.join(info)}</p>")
+        writer.write(f"<p class='info'><b>Info:</b> {'; '.join(sorted(info))}</p>")
     writer.end_section()
 
 def write_site(site, writer, known_domains):
@@ -193,7 +176,7 @@ def write_site(site, writer, known_domains):
     # Times are not right now that we limit requests, not sites.
     #if site.time > 5:
     #    tags.add(f"{site.time:.1f}s", "slow")
-    for tag, style in site.styled_tags():
+    for tag, style in sorted(site.styled_tags()):
         tags.add(tag, style)
 
     writer.start_section(f"<a class='url' href='{site.url}'>{site.url}</a>: {old}{new_text} {tags.html()}")
