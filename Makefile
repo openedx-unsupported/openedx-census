@@ -20,7 +20,8 @@ clean:				## remove all transient files
 ## Data management
 
 # Where Ned kept it
-OPENEDX_STATS_DIR = /src/edx/src/openedxstats
+#OPENEDX_STATS_DIR = /src/edx/src/openedxstats
+OPENEDX_STATS_DIR = /home/e0d/Documents/git/openedx/openedx-census/openedxstats
 
 .PHONY: save_referer_history fetch_referrer_logs get_referers get_known
 
@@ -30,7 +31,7 @@ save_referer_history:		## save current referers in the history directory
 	mv -n $(ALL_REFS) "refs/history/referers_$$(date -r $(ALL_REFS) +"%Y%m%d").txt"
 
 fetch_referer_logs:		## use openedxstats to get the latest referer logs
-	cd $(OPENEDX_STATS_DIR) && heroku run python manage.py fetch_referrer_logs
+	cd $(OPENEDX_STATS_DIR) && heroku run --app openedxstats python manage.py fetch_referrer_logs
 
 get_referers:			## get the latest referrers and aliases
 	./get-domains.sh
