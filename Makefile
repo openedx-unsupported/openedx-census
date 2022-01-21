@@ -48,8 +48,8 @@ NEW_PICKLE = state/new-refs.pickle
 
 $(NEW_REFS): $(ALL_REFS)
 	@# Sorry for the shell craziness!
-	@# date -v-2m    gives us the date of two months ago, so we can see the new referrers.
-	comm -13 refs/history/$$(ls -1 refs/history | awk '{if ($$0 < "referers_'$$(date -v-2m '+%Y%m%d')'.txt") print}' | tail -1) $(ALL_REFS) > $(NEW_REFS)
+	@# date -d '2 months ago'    gives us the date of two months ago, so we can see the new referrers.
+	comm -13 refs/history/$$(ls -1 refs/history | awk '{if ($$0 < "referers_'$$(date -d '2 months ago' '+%Y%m%d')'.txt") print}' | tail -1) $(ALL_REFS) > $(NEW_REFS)
 
 new_refs: $(NEW_REFS) new_scrape new_html	## scrape new referrers in the last 2 months
 
