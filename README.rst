@@ -2,6 +2,10 @@
 Open edX Census
 ###############
 
+.. warning::
+
+   This repository is no longer being actively developed or maintained.
+
 A command-line tool for scraping information from Open edX sites to
 gauge how many courses they are running.
 
